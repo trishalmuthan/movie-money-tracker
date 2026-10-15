@@ -41,6 +41,7 @@ The app replaces the sheet. It's a local web app with TMDB posters to make the d
 All money is stored and computed as **integer cents**. Dates are calendar dates (no time of day).
 
 ### Chain
+
 | Field | Type | Notes |
 | --- | --- | --- |
 | id | int | |
@@ -48,6 +49,7 @@ All money is stored and computed as **integer cents**. Dates are calendar dates 
 | standard_ticket_price | cents | What a normal adult ticket costs. Used for the "vs full price" savings. |
 
 ### GiftCardLoad
+
 | Field | Type | Notes |
 | --- | --- | --- |
 | id | int | |
@@ -58,6 +60,7 @@ All money is stored and computed as **integer cents**. Dates are calendar dates 
 | note | str? | e.g. "Costco 2×$25" |
 
 ### SubscriptionPlan
+
 A plan *period*. A price change ends one period and starts a new one.
 
 | Field | Type | Notes |
@@ -73,6 +76,7 @@ A plan *period*. A price change ends one period and starts a new one.
 Plan periods for the same chain must not overlap.
 
 ### FeeCharge
+
 One row per billed month.
 
 | Field | Type | Notes |
@@ -87,6 +91,7 @@ One row per billed month.
 **Generation:** on app start-up and on any plan change, charges are generated idempotently: one per (plan, billing month) up to and including today. Each charge is unique on (plan_id, year-month). Non-overridden charges belonging to a changed plan are recomputed. Deleting a plan is refused while it has overridden charges, and the user must end-date it instead.
 
 ### Visit
+
 | Field | Type | Notes |
 | --- | --- | --- |
 | id | int | |
@@ -101,6 +106,7 @@ One row per billed month.
 | note | str? | |
 
 ### Credit
+
 Money coming back, e.g. the 2025 "Mission Impossible: Final Reckoning" row of −$7.17.
 
 | Field | Type | Notes |
@@ -113,6 +119,7 @@ Money coming back, e.g. the 2025 "Mission Impossible: Final Reckoning" row of �
 | note | str? | |
 
 ### Film (TMDB cache)
+
 | Field | Type | Notes |
 | --- | --- | --- |
 | id | int | |
@@ -150,37 +157,45 @@ The real sheet rows (2025 and 2026 tabs, as of 2026-10-14) become test fixtures:
 ## 5. Features and screens
 
 ### 5.1 Dashboard (home)
+
 - **Year filter:** each year present in the data, plus "All time". Defaults to the current year.
 - **KPI tiles:** cash out, cost per movie, visits, wallet balance (per chain, with runway), total savings (discount + unlimited).
 - **Monthly chart:** bars for cash out and effective cost per month, with a line for visits.
 - **Year over year:** a table and chart comparing years by category (subscription fees, gift card loads, my ticket costs, guest spend, credits) and by chain.
 
 ### 5.2 Activity
+
 One ledger of every entry (visits, loads, fee charges, credits), newest first.
 - Filters: type, chain, month.
 - Each row: date, type, description (film title / "Regal gift card" / "Movie Club fee"), amount, payment source.
 - Edit and delete in place. Editing a fee charge marks it overridden.
 
 ### 5.3 Log a visit
+
 A fast form that works in a phone browser on the local network.
 - Film title search via TMDB (debounced). Picking a result fills in the title and poster. Free text is allowed when there's no match.
 - Date (defaults to today), chain (defaults to the chain of the most recent visit), my cost (defaults to $0.00), guests (count + cost), payment source (defaults to `free` when costs are 0, otherwise `gift_card`).
 
 ### 5.4 Add gift card
+
 Chain, date, price paid and face value, with the discount % shown live as you type.
 
 ### 5.5 Add credit
+
 Date, chain, amount, destination and note.
 
 ### 5.6 Films
+
 A poster grid of films I've seen. Each card shows the title, year, number of visits, my effective cost and guest tickets. It's a read-only view derived from visits.
 
 ### 5.7 Settings
+
 - Chains: name and standard ticket price.
 - Subscription plans: create, end-date, change price (which ends the current period and starts a new one).
 - TMDB status: whether a key is configured and reachable.
 
 ### 5.8 Import (one-time)
+
 1. Upload one CSV per sheet tab (Google Sheets → File → Download → CSV). The format is the first four columns *Item, Net Cost, Number of Tickets, Date*. Other columns are ignored.
 2. **Classify** each row:
    - Item contains "Movie Club Fee" → fee charge.
@@ -205,7 +220,7 @@ A poster grid of films I've seen. Each card shows the title, year, number of vis
 
 ## 7. Architecture
 
-```
+```text
 movie-money-tracker/
 ├── backend/            FastAPI app (uv project)
 │   ├── app/
