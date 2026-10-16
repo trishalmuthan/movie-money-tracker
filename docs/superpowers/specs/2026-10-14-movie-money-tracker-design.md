@@ -138,9 +138,15 @@ Notation: for a chain *c*, `L(c)` is its gift card loads and `G(c)` is everythin
 1. **Cash out** (per period) = Σ load `price_paid` + Σ bank-paid fee charges + Σ bank-paid visit (`my_cost` + `guest_cost`) − Σ bank credits. Everything is dated by its own date.
 2. **Wallet balance** (per chain, as of a date) = Σ `face_value` of L(c) + Σ gift-card credits − Σ amounts of G(c). A negative balance is allowed (it means a top-up is needed) and is flagged on the dashboard.
 3. **Runway** (per chain) = ⌊balance ÷ the active plan's amount⌋ months, shown only when the active plan pays from `gift_card`.
-4. **Discount rate** (per chain) `r(c)` = Σ `price_paid` ÷ Σ `face_value` over *all* of the chain's loads. If the chain has no loads, `r(c) = 1`.
-   - It's a lifetime weighted average, so adding a new load can shift past effective costs slightly. This is accepted for simplicity.
-5. **Effective cost** of a gift-card-paid amount *a* = round_half_up(*a* × `r(c)`). Bank-paid amounts count at face. Example: a $12.99 fee with r = 0.70 → $9.09.
+4. **Oldest card first (FIFO).** Each chain's wallet is a queue of *lots*, one per gift card load. Each lot is ordered by date, then id, and has a rate = `price_paid` ÷ `face_value`.
+   - Gift-card-paid amounts in G(c) are processed in date order (ties broken by id). Each one draws from the oldest lot with money remaining, spilling into the next lot if needed.
+   - A gift-card credit adds a lot with `price_paid` = 0 on its date. Refunded balance was already paid for once.
+5. **Effective cost** of a gift-card-paid amount = the sum over its draws of round_half_up(draw × lot rate). Bank-paid amounts count at face.
+   - Example: Card A was $35 for $50 (rate 0.70), so a $5.99 fee drawn from it costs **$4.19**. Buying a later card never changes it.
+   - Split example: a $5.99 fee with $2.00 left on Card A (0.70) and the rest on Card B ($45 for $50, 0.90) costs $1.40 + $3.59 = **$4.99**.
+   - **Exact totals:** the draw that empties a lot is costed at that lot's `price_paid` minus everything already costed from it. A fully used card's draws therefore add up to exactly its `price_paid`, with no rounding drift.
+   - **Overdraft:** any part of a charge with no lot left is *uncovered*. It's costed at face (rate 1) and flagged on the dashboard. When a later load arrives, it covers that debt first, and the overdrawn charges are re-costed at the new lot's rate. This is the only way a later card changes an earlier number.
+   - History only changes when an entry is added, edited or deleted with a date before the latest draw. Effective costs are recomputed from the full ledger each time, never stored.
 6. **Cost per movie** (per period) = (Σ effective fee charges + Σ effective visit `my_cost`) ÷ number of visits. Undefined (shown as "—") when there are no visits.
 7. **Guest spend** (per period) = Σ effective `guest_cost`. It's reported on its own and never counted in cost per movie.
 8. **Savings**
