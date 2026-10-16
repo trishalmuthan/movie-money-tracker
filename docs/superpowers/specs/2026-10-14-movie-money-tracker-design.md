@@ -172,6 +172,7 @@ The real sheet rows (2025 and 2026 tabs, as of 2026-10-14) become test fixtures:
 ### 5.2 Activity
 
 One ledger of every entry (visits, loads, fee charges, credits), newest first.
+
 - Filters: type, chain, month.
 - Each row: date, type, description (film title / "Regal gift card" / "Movie Club fee"), amount, payment source.
 - Edit and delete in place. Editing a fee charge marks it overridden.
@@ -179,6 +180,7 @@ One ledger of every entry (visits, loads, fee charges, credits), newest first.
 ### 5.3 Log a visit
 
 A fast form that works in a phone browser on the local network.
+
 - Film title search via TMDB (debounced). Picking a result fills in the title and poster. Free text is allowed when there's no match.
 - Date (defaults to today), chain (defaults to the chain of the most recent visit), my cost (defaults to $0.00), guests (count + cost), payment source (defaults to `free` when costs are 0, otherwise `gift_card`).
 
