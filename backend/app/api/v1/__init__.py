@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.v1 import chains, health
+from app.api.v1 import chains, gift_cards, health
 
 api_router = APIRouter()
-api_router.include_router(health.router)
-api_router.include_router(chains.router)
+for module in (health, chains, gift_cards):
+    api_router.include_router(module.router)
