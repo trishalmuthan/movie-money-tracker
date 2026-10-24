@@ -1,0 +1,23 @@
+name: Feature
+description: A capability someone using the app will notice
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be possible once this ships?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: "- [ ] "
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Spec section
+      placeholder: "§5.3"

@@ -1,0 +1,15 @@
+name: Chore
+description: Tooling, CI, dependencies, refactors with no behaviour change
+labels: ["type:chore"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What and why
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      value: "- [ ] "
