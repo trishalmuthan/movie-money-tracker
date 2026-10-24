@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from sqlalchemy.orm import sessionmaker
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
@@ -6,6 +7,7 @@ from starlette.types import Scope
 
 from app.api.v1 import api_router
 from app.config import Settings, get_settings
+from app.db.session import make_engine
 
 
 class SPAStaticFiles(StaticFiles):
@@ -23,6 +25,11 @@ class SPAStaticFiles(StaticFiles):
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(title="Movie Money Tracker")
+
+    engine = make_engine(settings.database_url)
+    app.state.engine = engine
+    app.state.session_factory = sessionmaker(engine, expire_on_commit=False)
+
     app.include_router(api_router, prefix="/api/v1")
 
     dist = settings.frontend_dist
