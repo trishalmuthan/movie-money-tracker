@@ -10,7 +10,7 @@ Prerequisites: [uv](https://docs.astral.sh/uv/) and Node 24.
 
 ```bash
 # API at http://127.0.0.1:8000
-cd backend && uv sync && uv run uvicorn app.main:create_app --factory --reload
+cd backend && uv sync && uv run alembic upgrade head && uv run uvicorn app.main:create_app --factory --reload
 
 # UI with hot reload at http://localhost:5173 (second terminal)
 cd frontend && npm install && npm run dev
