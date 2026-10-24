@@ -1,0 +1,39 @@
+[project]
+name = "movie-money-tracker"
+version = "0.1.0"
+description = "Track the money spent on moviegoing: subscriptions, gift cards, and tickets"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi>=0.162.0",
+    "pydantic-settings>=2.16.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]  # line length is the formatter's job
+
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.16.0",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]

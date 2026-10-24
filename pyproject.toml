@@ -1,7 +1,0 @@
-[project]
-name = "movie-money-tracker"
-version = "0.1.0"
-description = "Track the money spent on moviegoing: subscriptions, gift cards, and tickets"
-readme = "README.md"
-requires-python = ">=3.14"
-dependencies = []
