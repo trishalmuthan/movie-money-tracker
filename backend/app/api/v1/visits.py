@@ -48,6 +48,11 @@ def list_visits(session: SessionDep, chain_id: int | None = None) -> list[models
     return list(session.scalars(stmt))
 
 
+@router.get("/{visit_id}", response_model=VisitOut)
+def get_visit(visit_id: int, session: SessionDep) -> models.Visit:
+    return get_or_404(session, models.Visit, visit_id)
+
+
 @router.post("", response_model=VisitOut, status_code=201)
 def create_visit(body: VisitIn, session: SessionDep, today: TodayDep) -> models.Visit:
     reject_future(body.date, today)

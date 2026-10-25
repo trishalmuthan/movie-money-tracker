@@ -91,3 +91,10 @@ def test_update_and_delete(client: TestClient) -> None:
     assert client.delete("/api/v1/visits/1").status_code == 204
     assert client.put("/api/v1/visits/1", json=VISIT).status_code == 404
     assert client.delete("/api/v1/visits/1").status_code == 404
+
+
+def test_get_one_visit(client: TestClient) -> None:
+    _chain(client)
+    created = client.post("/api/v1/visits", json=VISIT).json()
+    assert client.get("/api/v1/visits/1").json() == created
+    assert client.get("/api/v1/visits/9").status_code == 404

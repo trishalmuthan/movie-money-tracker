@@ -4,9 +4,9 @@ import {
   CreditFormPage,
   GiftCardFormPage,
   NotFoundPage,
-  VisitFormPage,
 } from '../pages/placeholders'
 import { SettingsPage } from '../pages/SettingsPage'
+import { VisitFormPage } from '../pages/VisitFormPage'
 import { Layout } from './Layout'
 
 export const routes: RouteObject[] = [

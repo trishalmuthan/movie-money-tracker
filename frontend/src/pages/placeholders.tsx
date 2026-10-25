@@ -1,22 +1,13 @@
 import { Link } from 'react-router'
 import { Page } from '../components/Page'
 
-// Each of these is replaced by its real screen later in M2 (issues #33–#35).
+// Each of these is replaced by its real screen later in M2 (issues #34–#35).
 
 export function ActivityPage() {
   return (
     <Page
       title="Activity"
       intro="Every visit, gift card and refund you log will be listed here, newest first, with what each one really cost."
-    />
-  )
-}
-
-export function VisitFormPage({ mode }: { mode: 'new' | 'edit' }) {
-  return (
-    <Page
-      title={mode === 'new' ? 'Log a visit' : 'Edit visit'}
-      intro="Record the film, the date, what you paid and anyone you brought."
     />
   )
 }
