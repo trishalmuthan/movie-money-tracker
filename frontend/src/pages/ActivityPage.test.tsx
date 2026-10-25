@@ -73,7 +73,7 @@ describe('Activity', () => {
     expect(within(bankVisit).queryByText(/really/)).not.toBeInTheDocument()
   })
 
-  it('shows subscription fees, without actions until the fee form exists', async () => {
+  it('shows subscription fees, editable but never deleted', async () => {
     activityApi({
       entries: [
         { kind: 'fee', id: 1, date: '2026-01-22', chain_id: 1, description: 'Regal subscription', amount: 599, payment_source: 'gift_card', effective_cost: 419 },
@@ -84,7 +84,10 @@ describe('Activity', () => {
     const fee = await screen.findByRole('listitem', { name: 'Regal subscription' })
     expect(within(fee).getByText('Fee, Regal, Paid with gift card')).toBeInTheDocument()
     expect(within(fee).getByText('really $4.19')).toBeInTheDocument()
-    expect(within(fee).queryByRole('link', { name: /Edit/ })).not.toBeInTheDocument()
+    expect(within(fee).getByRole('link', { name: 'Edit Regal subscription' })).toHaveAttribute(
+      'href',
+      '/fees/1/edit',
+    )
     expect(within(fee).queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument()
   })
 

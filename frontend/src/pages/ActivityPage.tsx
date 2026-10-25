@@ -23,8 +23,9 @@ const KINDS: { value: EntryKind; label: string; singular: string }[] = [
   { value: 'credit', label: 'Refunds', singular: 'Refund' },
 ]
 
-const EDIT_PATH: Record<Exclude<EntryKind, 'fee'>, string> = {
+const EDIT_PATH: Record<EntryKind, string> = {
   visit: 'visits',
+  fee: 'fees',
   gift_card: 'gift-cards',
   credit: 'credits',
 }
@@ -239,8 +240,8 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
     entry.chain_id !== null ? chainNames.get(entry.chain_id) : undefined,
     describeSource(entry),
   ].filter(Boolean)
-  // Fees are edited, never deleted; their form arrives with #49.
-  const target = entry.kind === 'fee' ? null : { kind: entry.kind, id: entry.id }
+  // A fee belongs to its subscription: edit it (or set it to $0), never delete it.
+  const deletable = entry.kind === 'fee' ? null : { kind: entry.kind, id: entry.id }
   const differs = entry.effective_cost !== null && entry.effective_cost !== entry.amount
 
   return (
@@ -249,32 +250,32 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
       <div className="min-w-0 flex-1">
         <p className="break-words">{entry.description}</p>
         <p className="text-sm text-dim">{meta.join(', ')}</p>
-        {target && (
-          <div className="-ml-2 flex flex-wrap items-center gap-1">
-            {confirming ? (
-              <>
-                <span className="ml-2 text-sm">Delete this {kindLabel.toLowerCase()}?</span>
-                <button
-                  type="button"
-                  className={dangerButton}
-                  disabled={remove.isPending}
-                  onClick={() => remove.mutate(target)}
-                >
-                  Yes, delete
-                </button>
-                <button type="button" className={quietButton} onClick={() => setConfirming(false)}>
-                  Keep it
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to={`/${EDIT_PATH[target.kind]}/${target.id}/edit`}
-                  className={quietButton}
-                  aria-label={`Edit ${entry.description}`}
-                >
-                  Edit
-                </Link>
+        <div className="-ml-2 flex flex-wrap items-center gap-1">
+          {confirming ? (
+            <>
+              <span className="ml-2 text-sm">Delete this {kindLabel.toLowerCase()}?</span>
+              <button
+                type="button"
+                className={dangerButton}
+                disabled={remove.isPending}
+                onClick={() => remove.mutate(deletable!)}
+              >
+                Yes, delete
+              </button>
+              <button type="button" className={quietButton} onClick={() => setConfirming(false)}>
+                Keep it
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to={`/${EDIT_PATH[entry.kind]}/${entry.id}/edit`}
+                className={quietButton}
+                aria-label={`Edit ${entry.description}`}
+              >
+                Edit
+              </Link>
+              {deletable && (
                 <button
                   type="button"
                   className={quietButton}
@@ -286,10 +287,10 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
                 >
                   Delete
                 </button>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </div>
         {remove.isError && (
           <p role="alert" className="text-sm text-warn">
             {errorMessage(remove.error)}
