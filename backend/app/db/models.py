@@ -3,13 +3,22 @@
 import datetime as dt
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, Date, Enum, ForeignKey, String
+from sqlalchemy import CheckConstraint, Date, Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 from app.domain.types import CreditDestination, PaymentSource
 
-__all__ = ["Chain", "Credit", "CreditDestination", "GiftCardLoad", "PaymentSource", "Visit"]
+__all__ = [
+    "Chain",
+    "Credit",
+    "CreditDestination",
+    "FeeCharge",
+    "GiftCardLoad",
+    "PaymentSource",
+    "SubscriptionPlan",
+    "Visit",
+]
 
 
 def _enum[E: StrEnum](enum_cls: type[E]) -> Enum:
@@ -79,3 +88,44 @@ class Credit(Base):
     amount: Mapped[int]
     destination: Mapped[CreditDestination] = mapped_column(_enum(CreditDestination))
     note: Mapped[str | None] = mapped_column(String(200))
+
+
+class SubscriptionPlan(Base):
+    """One price period of a subscription. A price change ends one period and starts the next."""
+
+    __tablename__ = "subscription_plans"
+    __table_args__ = (
+        CheckConstraint("amount > 0", name="amount_positive"),
+        CheckConstraint("billing_day BETWEEN 1 AND 28", name="billing_day_in_every_month"),
+        CheckConstraint("end_date IS NULL OR end_date >= start_date", name="ends_after_start"),
+        CheckConstraint("payment_source != 'free'", name="never_free"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chain_id: Mapped[int] = mapped_column(ForeignKey("chains.id", ondelete="RESTRICT"), index=True)
+    amount: Mapped[int]
+    billing_day: Mapped[int]
+    start_date: Mapped[dt.date] = mapped_column(Date)
+    end_date: Mapped[dt.date | None] = mapped_column(Date)
+    payment_source: Mapped[PaymentSource] = mapped_column(_enum(PaymentSource))
+
+
+class FeeCharge(Base):
+    """One month's fee. Generated from its plan unless `is_overridden` (then never touched)."""
+
+    __tablename__ = "fee_charges"
+    __table_args__ = (
+        UniqueConstraint("plan_id", "month", name="uq_fee_charges_plan_month"),
+        CheckConstraint("amount >= 0", name="amount_nonneg"),  # 0 = a skipped month
+        CheckConstraint("payment_source != 'free'", name="never_free"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    plan_id: Mapped[int] = mapped_column(
+        ForeignKey("subscription_plans.id", ondelete="CASCADE"), index=True
+    )
+    month: Mapped[str] = mapped_column(String(7))  # "YYYY-MM"
+    date: Mapped[dt.date] = mapped_column(Date, index=True)
+    amount: Mapped[int]
+    payment_source: Mapped[PaymentSource] = mapped_column(_enum(PaymentSource))
+    is_overridden: Mapped[bool] = mapped_column(default=False)

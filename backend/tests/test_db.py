@@ -62,3 +62,92 @@ def test_migrations_match_models(tmp_path: Path) -> None:
         diff = compare_metadata(MigrationContext.configure(connection), Base.metadata)
     engine.dispose()
     assert diff == []
+
+
+def _plan(db: Session, **overrides: object) -> models.SubscriptionPlan:
+    db.add(models.Chain(name="Regal", standard_ticket_price=1500))
+    db.flush()
+    plan = models.SubscriptionPlan(
+        **{
+            "chain_id": 1,
+            "amount": 599,
+            "billing_day": 22,
+            "start_date": JAN1,
+            "end_date": None,
+            "payment_source": models.PaymentSource.GIFT_CARD,
+            **overrides,
+        }
+    )
+    db.add(plan)
+    db.flush()
+    return plan
+
+
+def test_billing_day_must_exist_in_every_month(db: Session) -> None:
+    with pytest.raises(IntegrityError):
+        _plan(db, billing_day=29)
+
+
+def test_a_plan_cannot_end_before_it_starts(db: Session) -> None:
+    with pytest.raises(IntegrityError):
+        _plan(db, end_date=dt.date(2025, 12, 31))
+
+
+def test_a_subscription_is_never_free(db: Session) -> None:
+    with pytest.raises(IntegrityError):
+        _plan(db, payment_source=models.PaymentSource.FREE)
+
+
+def test_one_charge_per_plan_per_month(db: Session) -> None:
+    plan = _plan(db)
+    jan22 = dt.date(2026, 1, 22)
+    db.add(
+        models.FeeCharge(
+            plan_id=plan.id,
+            month="2026-01",
+            date=jan22,
+            amount=599,
+            payment_source=models.PaymentSource.GIFT_CARD,
+            is_overridden=False,
+        )
+    )
+    db.flush()
+    db.add(
+        models.FeeCharge(
+            plan_id=plan.id,
+            month="2026-01",
+            date=jan22,
+            amount=599,
+            payment_source=models.PaymentSource.GIFT_CARD,
+            is_overridden=False,
+        )
+    )
+    with pytest.raises(IntegrityError):
+        db.flush()
+
+
+def test_a_skipped_month_is_a_zero_charge(db: Session) -> None:
+    plan = _plan(db)
+    db.add(
+        models.FeeCharge(
+            plan_id=plan.id,
+            month="2026-03",
+            date=dt.date(2026, 3, 22),
+            amount=0,
+            payment_source=models.PaymentSource.GIFT_CARD,
+            is_overridden=True,
+        )
+    )
+    db.flush()  # allowed
+    db.add(
+        models.FeeCharge(
+            plan_id=plan.id,
+            month="2026-04",
+            date=dt.date(2026, 4, 22),
+            amount=-1,
+            payment_source=models.PaymentSource.GIFT_CARD,
+            is_overridden=True,
+        )
+    )
+    with pytest.raises(IntegrityError):
+        db.flush()
