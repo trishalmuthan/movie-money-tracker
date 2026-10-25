@@ -179,7 +179,7 @@ One ledger of every entry (visits, loads, fee charges, credits), newest first.
 
 ### 5.3 Log a visit
 
-A fast form that works in a phone browser on the local network.
+A fast form with a mobile-friendly layout. The app is localhost-only in v1: access from a phone on the local network is deferred, because it would expose an app with no login to everyone on the Wi-Fi.
 
 - Film title search via TMDB (debounced). Picking a result fills in the title and poster. Free text is allowed when there's no match.
 - Date (defaults to today), chain (defaults to the chain of the most recent visit), my cost (defaults to $0.00), guests (count + cost), payment source (defaults to `free` when costs are 0, otherwise `gift_card`).
