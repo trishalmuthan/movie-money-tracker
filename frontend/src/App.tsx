@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { api } from './api/client'
 
-type ApiStatus = 'checking' | 'ok' | 'down'
+function useApiStatus(): 'checking' | 'ok' | 'down' {
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/api/v1/health')
+      if (error !== undefined || data === undefined) throw new Error('health check failed')
+      return data
+    },
+  })
+  if (health.isPending) return 'checking'
+  return health.data?.status === 'ok' ? 'ok' : 'down'
+}
 
 export default function App() {
-  const [status, setStatus] = useState<ApiStatus>('checking')
-
-  useEffect(() => {
-    fetch('/api/v1/health')
-      .then((response) =>
-        response.ok ? response.json() : Promise.reject(new Error(String(response.status))),
-      )
-      .then((body: { status: string }) => setStatus(body.status === 'ok' ? 'ok' : 'down'))
-      .catch(() => setStatus('down'))
-  }, [])
-
+  const status = useApiStatus()
   return (
     <main className="min-h-screen bg-neutral-950 p-6 text-neutral-100">
       <h1 className="text-2xl font-semibold">Movie Money Tracker</h1>
