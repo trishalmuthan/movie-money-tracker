@@ -142,3 +142,11 @@ def test_totals_cover_every_readable_row() -> None:
     # 11.99 − 7.17 + 5.00 + 0 + 40.00 + 1.75 (the mystery row can't be read).
     assert legacy_total(parsed) == 1199 - 717 + 500 + 0 + 4000 + 175
     assert ticket_total(parsed) == 1 + 1 + 4 + 2
+
+
+def test_fixes_replace_cells_before_parsing() -> None:
+    parsed = parse_sheet_csv(
+        REFERENCE_2025, fixes={(8, "Net Cost"): "2.50", (8, "Date"): "8/1/2025"}
+    )
+    assert parsed.errors == ()
+    assert (parsed.rows[-1].net_cost, parsed.rows[-1].date) == (250, D(2025, 8, 1))
