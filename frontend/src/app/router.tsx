@@ -3,6 +3,7 @@ import { ActivityPage } from '../pages/ActivityPage'
 import { CreditFormPage } from '../pages/CreditFormPage'
 import { FeeFormPage } from '../pages/FeeFormPage'
 import { GiftCardFormPage } from '../pages/GiftCardFormPage'
+import { ImportPage } from '../pages/import/ImportPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { VisitFormPage } from '../pages/VisitFormPage'
@@ -20,6 +21,7 @@ export const routes: RouteObject[] = [
       { path: 'credits/new', element: <CreditFormPage mode="new" /> },
       { path: 'credits/:id/edit', element: <CreditFormPage mode="edit" /> },
       { path: 'fees/:id/edit', element: <FeeFormPage /> },
+      { path: 'import', element: <ImportPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

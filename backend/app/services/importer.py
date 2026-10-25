@@ -111,6 +111,7 @@ def commit(
         models.ImportFile(
             import_id=record.id,
             name=t.name,
+            rows=t.rows,
             legacy_total=t.legacy_total,
             ticket_total=t.tickets,
             imported_total=t.imported_total,

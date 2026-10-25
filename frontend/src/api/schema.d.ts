@@ -591,6 +591,8 @@ export interface components {
         ImportFileTotals: {
             /** Name */
             name: string;
+            /** Rows */
+            rows: number;
             /** Legacy Total */
             legacy_total: number;
             /** Tickets */

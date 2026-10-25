@@ -142,6 +142,7 @@ class Blocker:
 @dataclass(frozen=True, slots=True)
 class FileTotals:
     name: str
+    rows: int  # every non-blank row after the header, readable or not
     legacy_total: Cents  # every readable row, cutoff or not: compare with the sheet's own total
     tickets: int
     imported_total: Cents
@@ -200,6 +201,7 @@ def build_proposal(files: Sequence[SheetFile], choices: Choices, existing: Exist
         totals.append(
             FileTotals(
                 file.name,
+                len(parsed.rows) + len({e.line for e in parsed.errors}),
                 legacy_total(parsed),
                 ticket_total(parsed),
                 sum(r.net_cost for r in kept),
