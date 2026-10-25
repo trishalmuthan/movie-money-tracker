@@ -225,6 +225,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/fees/{fee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Fee */
+        get: operations["get_fee_api_v1_fees__fee_id__get"];
+        /**
+         * Update Fee
+         * @description Edit one month. Generation never touches it again until it's reset.
+         */
+        put: operations["update_fee_api_v1_fees__fee_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fees/{fee_id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Fee
+         * @description Hand the month back to its plan: its amount, source and billing day.
+         */
+        post: operations["reset_fee_api_v1_fees__fee_id__reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/activity": {
         parameters: {
             query?: never;
@@ -283,6 +324,11 @@ export interface components {
             payment_source: string | null;
             /** Effective Cost */
             effective_cost: number | null;
+            /**
+             * Is Overridden
+             * @default false
+             */
+            is_overridden: boolean;
         };
         /** ChainIn */
         ChainIn: {
@@ -338,7 +384,34 @@ export interface components {
             id: number;
         };
         /** @enum {string} */
-        EntryKind: "visit" | "gift_card" | "credit";
+        EntryKind: "visit" | "fee" | "gift_card" | "credit";
+        /** FeeIn */
+        FeeIn: {
+            /** Amount */
+            amount: number;
+            payment_source: components["schemas"]["PaymentSource"];
+        };
+        /** FeeOut */
+        FeeOut: {
+            /** Amount */
+            amount: number;
+            payment_source: components["schemas"]["PaymentSource"];
+            /** Id */
+            id: number;
+            /** Plan Id */
+            plan_id: number;
+            /** Chain Id */
+            chain_id: number;
+            /** Month */
+            month: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Is Overridden */
+            is_overridden: boolean;
+        };
         /** GiftCardIn */
         GiftCardIn: {
             /** Chain Id */
@@ -511,6 +584,8 @@ export interface components {
             balance: number;
             /** Uncovered */
             uncovered: number;
+            /** Runway Months */
+            runway_months: number | null;
         };
     };
     responses: never;
@@ -1296,6 +1371,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fee_api_v1_fees__fee_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fee_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_fee_api_v1_fees__fee_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fee_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_fee_api_v1_fees__fee_id__reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fee_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeeOut"];
                 };
             };
             /** @description Validation Error */

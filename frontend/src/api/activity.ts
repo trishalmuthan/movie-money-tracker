@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { ActivityEntry } from '../lib/activity'
 import { api } from './client'
 import { unwrap } from './errors'
 import { useInvalidateAll } from './invalidate'
@@ -30,11 +29,11 @@ export function useWallets() {
   })
 }
 
-/** Delete any activity entry through its own resource's endpoint. */
+/** Delete an activity entry through its own resource's endpoint. Fees are edited, never deleted. */
 export function useDeleteEntry() {
   const onSuccess = useInvalidateAll()
   return useMutation({
-    mutationFn: ({ kind, id }: Pick<ActivityEntry, 'kind' | 'id'>) => {
+    mutationFn: ({ kind, id }: { kind: Exclude<EntryKind, 'fee'>; id: number }) => {
       switch (kind) {
         case 'visit':
           return unwrap(api.DELETE('/api/v1/visits/{visit_id}', { params: { path: { visit_id: id } } }))

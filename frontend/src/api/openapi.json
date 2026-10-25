@@ -1044,6 +1044,142 @@
         }
       }
     },
+    "/api/v1/fees/{fee_id}": {
+      "get": {
+        "tags": [
+          "fees"
+        ],
+        "summary": "Get Fee",
+        "operationId": "get_fee_api_v1_fees__fee_id__get",
+        "parameters": [
+          {
+            "name": "fee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Fee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "fees"
+        ],
+        "summary": "Update Fee",
+        "description": "Edit one month. Generation never touches it again until it's reset.",
+        "operationId": "update_fee_api_v1_fees__fee_id__put",
+        "parameters": [
+          {
+            "name": "fee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Fee Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fees/{fee_id}/reset": {
+      "post": {
+        "tags": [
+          "fees"
+        ],
+        "summary": "Reset Fee",
+        "description": "Hand the month back to its plan: its amount, source and billing day.",
+        "operationId": "reset_fee_api_v1_fees__fee_id__reset_post",
+        "parameters": [
+          {
+            "name": "fee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Fee Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/activity": {
       "get": {
         "tags": [
@@ -1212,6 +1348,11 @@
               }
             ],
             "title": "Effective Cost"
+          },
+          "is_overridden": {
+            "type": "boolean",
+            "title": "Is Overridden",
+            "default": false
           }
         },
         "type": "object",
@@ -1385,9 +1526,77 @@
         "type": "string",
         "enum": [
           "visit",
+          "fee",
           "gift_card",
           "credit"
         ]
+      },
+      "FeeIn": {
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Amount"
+          },
+          "payment_source": {
+            "$ref": "#/components/schemas/PaymentSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "payment_source"
+        ],
+        "title": "FeeIn"
+      },
+      "FeeOut": {
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Amount"
+          },
+          "payment_source": {
+            "$ref": "#/components/schemas/PaymentSource"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "plan_id": {
+            "type": "integer",
+            "title": "Plan Id"
+          },
+          "chain_id": {
+            "type": "integer",
+            "title": "Chain Id"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "is_overridden": {
+            "type": "boolean",
+            "title": "Is Overridden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "payment_source",
+          "id",
+          "plan_id",
+          "chain_id",
+          "month",
+          "date",
+          "is_overridden"
+        ],
+        "title": "FeeOut"
       },
       "GiftCardIn": {
         "properties": {
@@ -1805,6 +2014,17 @@
           "uncovered": {
             "type": "integer",
             "title": "Uncovered"
+          },
+          "runway_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runway Months"
           }
         },
         "type": "object",
@@ -1812,7 +2032,8 @@
           "chain_id",
           "chain_name",
           "balance",
-          "uncovered"
+          "uncovered",
+          "runway_months"
         ],
         "title": "WalletOut"
       }

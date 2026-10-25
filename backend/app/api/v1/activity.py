@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from app.api.deps import SessionDep
+from app.api.deps import SessionDep, TodayDep
 from app.db import models
 from app.domain.allocation import Allocation, allocate
 from app.domain.money import format_cents
@@ -13,10 +13,10 @@ from app.services.ledger import load_ledger
 
 router = APIRouter(tags=["activity"])
 
-type EntryKind = Literal["visit", "gift_card", "credit"]
+type EntryKind = Literal["visit", "fee", "gift_card", "credit"]
 
-# Within one day: credits, then visits, then gift cards (newest-first reading order).
-_KIND_ORDER: dict[str, int] = {"credit": 0, "visit": 1, "gift_card": 2}
+# Within one day, newest-first: credits, visits, fees, then the gift cards that paid for them.
+_KIND_ORDER: dict[str, int] = {"credit": 0, "visit": 1, "fee": 2, "gift_card": 3}
 
 
 class ActivityEntry(BaseModel):
@@ -26,23 +26,33 @@ class ActivityEntry(BaseModel):
     chain_id: int | None
     description: str
     amount: int  # signed cents: credits are negative
-    payment_source: str | None  # visit's source, credit's destination, None for gift cards
+    payment_source: str | None  # visit/fee source, credit's destination, None for gift cards
     effective_cost: int | None  # what it really cost; None for credits
+    is_overridden: bool = False  # a fee month edited by hand
 
 
 @router.get("/activity", response_model=list[ActivityEntry])
 def list_activity(
     session: SessionDep,
+    today: TodayDep,
     kind: EntryKind | None = None,
     chain_id: int | None = None,
     month: Annotated[str | None, Query(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")] = None,
 ) -> list[ActivityEntry]:
-    ledger = load_ledger(session)
+    ledger = load_ledger(session, today)
     alloc = allocate(ledger)
     chain_names = {chain.id: chain.name for chain in ledger.chains}
 
     entries = [
         *(_visit_entry(v, alloc) for v in session.scalars(select(models.Visit))),
+        *(
+            _fee_entry(f, chain_id, chain_names, alloc)
+            for f, chain_id in session.execute(
+                select(models.FeeCharge, models.SubscriptionPlan.chain_id).join(
+                    models.SubscriptionPlan
+                )
+            )
+        ),
         *(_gift_card_entry(g, chain_names) for g in session.scalars(select(models.GiftCardLoad))),
         *(_credit_entry(c) for c in session.scalars(select(models.Credit))),
     ]
@@ -73,6 +83,22 @@ def _visit_entry(v: models.Visit, alloc: Allocation) -> ActivityEntry:
         amount=v.my_cost + v.guest_cost,
         payment_source=v.payment_source.value,
         effective_cost=effective,
+    )
+
+
+def _fee_entry(
+    f: models.FeeCharge, chain_id: int, chain_names: dict[int, str], alloc: Allocation
+) -> ActivityEntry:
+    return ActivityEntry(
+        kind="fee",
+        id=f.id,
+        date=f.date,
+        chain_id=chain_id,
+        description=f"{chain_names[chain_id]} subscription",
+        amount=f.amount,
+        payment_source=f.payment_source.value,
+        effective_cost=alloc.effective_cost(("fee", f.id), f.amount, f.payment_source),
+        is_overridden=f.is_overridden,
     )
 
 
