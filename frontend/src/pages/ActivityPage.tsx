@@ -133,6 +133,16 @@ function WalletBalance({ wallet }: { wallet: Wallet }) {
           {formatCents(wallet.uncovered)} not covered by gift card balance
         </p>
       )}
+      {/* Runway: only for a gift-card-paid subscription, and not on top of an uncovered warning. */}
+      {wallet.runway_months !== null && wallet.uncovered === 0 && wallet.balance >= 0 && (
+        wallet.runway_months === 0 ? (
+          <p className="text-sm text-warn">Not enough for next month's fee</p>
+        ) : (
+          <p className="text-sm text-dim">
+            Covers about {wallet.runway_months} more month{wallet.runway_months === 1 ? '' : 's'}
+          </p>
+        )
+      )}
     </div>
   )
 }
@@ -220,6 +230,8 @@ function MonthSection({ month, entries, chainNames }: MonthSectionProps) {
 }
 
 function describeSource(entry: ActivityEntry): string | undefined {
+  // A $0 fee is a month you skipped; it moved no money, so how it was paid doesn't matter.
+  if (entry.kind === 'fee' && entry.amount === 0) return 'Skipped'
   if (entry.kind === 'visit' || entry.kind === 'fee') {
     return { free: 'Free', gift_card: 'Paid with gift card', bank: 'Paid by bank' }[
       entry.payment_source ?? ''
@@ -239,6 +251,7 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
     kindLabel,
     entry.chain_id !== null ? chainNames.get(entry.chain_id) : undefined,
     describeSource(entry),
+    entry.is_overridden && entry.amount > 0 ? 'edited' : undefined,
   ].filter(Boolean)
   // A fee belongs to its subscription: edit it (or set it to $0), never delete it.
   const deletable = entry.kind === 'fee' ? null : { kind: entry.kind, id: entry.id }
@@ -298,7 +311,7 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
         )}
       </div>
       <div className="shrink-0 text-right">
-        {/* Brass is for money that moved; a $0 visit stays quiet. */}
+        {/* Brass is for money that moved; a $0 visit or skipped fee stays quiet. */}
         <p className={`money text-2xl leading-none ${entry.amount === 0 ? 'text-dim' : ''}`}>
           {formatCents(entry.amount)}
         </p>
