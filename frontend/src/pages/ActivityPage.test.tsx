@@ -14,6 +14,7 @@ type Entry = {
   amount: number
   payment_source: string | null
   effective_cost: number | null
+  is_overridden?: boolean
 }
 
 // The M1 reference scenario plus a $7.17 bank refund, as GET /activity returns it.
@@ -27,7 +28,7 @@ const CHAINS = [{ id: 1, name: 'Regal', standard_ticket_price: 1500 }]
 
 function activityApi({
   entries = SCENARIO,
-  wallets = [{ chain_id: 1, chain_name: 'Regal', balance: 2400, uncovered: 0 }],
+  wallets = [{ chain_id: 1, chain_name: 'Regal', balance: 2400, uncovered: 0, runway_months: null as number | null }],
 } = {}) {
   let current = [...entries]
   let currentWallets = [...wallets]
@@ -91,16 +92,68 @@ describe('Activity', () => {
     expect(within(fee).queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument()
   })
 
+  it('labels skipped and edited months', async () => {
+    const fee = { kind: 'fee' as const, chain_id: 1, description: 'Regal subscription', is_overridden: true }
+    activityApi({
+      entries: [
+        { ...fee, id: 4, date: '2026-04-22', amount: 1299, payment_source: 'bank', effective_cost: 1299 },
+        { ...fee, id: 3, date: '2026-03-22', amount: 0, payment_source: 'gift_card', effective_cost: 0 },
+      ],
+    })
+    renderRoutes(ROUTES, '/activity')
+    const march = await screen.findByRole('region', { name: 'March 2026' })
+    expect(within(march).getByText('Fee, Regal, Skipped')).toBeInTheDocument()
+    expect(within(march).getByText('$0.00')).toHaveClass('text-dim')
+    const april = screen.getByRole('region', { name: 'April 2026' })
+    expect(within(april).getByText('Fee, Regal, Paid by bank, edited')).toBeInTheDocument()
+    // A bank-paid fee is cash out; the skipped one moves nothing.
+    expect(within(april).getByText('Cash out $12.99')).toBeInTheDocument()
+    expect(within(march).getByText('Cash out $0.00')).toBeInTheDocument()
+  })
+
+  it('shows a fee the cards could not cover at full price', async () => {
+    activityApi({
+      entries: [
+        { kind: 'fee', id: 9, date: '2026-09-22', chain_id: 1, description: 'Regal subscription', amount: 1299, payment_source: 'gift_card', effective_cost: 1299 },
+      ],
+      wallets: [{ chain_id: 1, chain_name: 'Regal', balance: -2592, uncovered: 2592, runway_months: 0 }],
+    })
+    renderRoutes(ROUTES, '/activity')
+    const fee = await screen.findByRole('listitem', { name: 'Regal subscription' })
+    expect(within(fee).getByText('$12.99')).toBeInTheDocument()
+    expect(within(fee).queryByText(/really/)).not.toBeInTheDocument()
+    const wallets = screen.getByRole('region', { name: 'Gift card balances' })
+    expect(await within(wallets).findByText('$25.92 not covered by gift card balance')).toBeInTheDocument()
+    // Already short: the runway line would only repeat the warning.
+    expect(within(wallets).queryByText(/next month|more month/)).not.toBeInTheDocument()
+  })
+
+  it('shows how many months of the fee the balance covers', async () => {
+    const regal = { chain_id: 1, chain_name: 'Regal', balance: 2400, uncovered: 0 }
+    activityApi({ wallets: [{ ...regal, runway_months: 1 }, { ...regal, chain_id: 2, chain_name: 'AMC', runway_months: 4 }] })
+    renderRoutes(ROUTES, '/activity')
+    expect(await screen.findByText('Covers about 1 more month')).toBeInTheDocument()
+    expect(screen.getByText('Covers about 4 more months')).toBeInTheDocument()
+  })
+
+  it("warns when the balance won't cover next month's fee", async () => {
+    activityApi({ wallets: [{ chain_id: 1, chain_name: 'Regal', balance: 500, uncovered: 0, runway_months: 0 }] })
+    renderRoutes(ROUTES, '/activity')
+    expect(await screen.findByText("Not enough for next month's fee")).toHaveClass('text-warn')
+  })
+
   it('shows each wallet balance', async () => {
     activityApi()
     renderRoutes(ROUTES, '/activity')
     const wallets = await screen.findByRole('region', { name: 'Gift card balances' })
     expect(await within(wallets).findByText('$24.00')).toBeInTheDocument()
     expect(within(wallets).getByText('Regal')).toBeInTheDocument()
+    // No gift-card-paid subscription, so no runway.
+    expect(within(wallets).queryByText(/Covers about/)).not.toBeInTheDocument()
   })
 
   it('warns when spending is not covered by gift card balance', async () => {
-    activityApi({ wallets: [{ chain_id: 1, chain_name: 'Regal', balance: -500, uncovered: 500 }] })
+    activityApi({ wallets: [{ chain_id: 1, chain_name: 'Regal', balance: -500, uncovered: 500, runway_months: null }] })
     renderRoutes(ROUTES, '/activity')
     expect(
       await screen.findByText('$5.00 not covered by gift card balance'),
