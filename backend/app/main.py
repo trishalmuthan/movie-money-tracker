@@ -7,6 +7,7 @@ from starlette.types import Scope
 
 from app.api.v1 import api_router
 from app.config import Settings, get_settings
+from app.db.migrate import upgrade_to_head
 from app.db.session import make_engine
 
 
@@ -26,6 +27,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     app = FastAPI(title="Movie Money Tracker")
 
+    if settings.migrate_on_startup:
+        upgrade_to_head(settings.database_url)
     engine = make_engine(settings.database_url)
     app.state.engine = engine
     app.state.session_factory = sessionmaker(engine, expire_on_commit=False)

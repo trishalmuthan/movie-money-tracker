@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(REPO_ROOT / 'data' / 'app.db').as_posix()}"
     frontend_dist: Path | None = REPO_ROOT / "frontend" / "dist"
     tmdb_api_key: str | None = None
+    migrate_on_startup: bool = True
 
 
 @lru_cache

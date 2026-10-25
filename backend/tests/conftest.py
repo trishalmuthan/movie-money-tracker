@@ -21,6 +21,7 @@ def settings(tmp_path: Path) -> Settings:
     return Settings(
         database_url=f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
         frontend_dist=None,
+        migrate_on_startup=False,  # tests build the schema with create_all
     )
 
 
