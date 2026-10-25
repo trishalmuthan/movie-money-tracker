@@ -23,3 +23,8 @@ export function formatCents(amount: number): string {
   const cents = String(abs % 100).padStart(2, '0')
   return `${sign}$${dollars}.${cents}`
 }
+
+/** Whole-percent discount when `face` value was bought for `price` (both cents, face > 0). */
+export function discountPercent(price: number, face: number): number {
+  return Math.round(((face - price) * 100) / face)
+}

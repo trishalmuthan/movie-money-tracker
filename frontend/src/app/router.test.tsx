@@ -21,6 +21,7 @@ beforeEach(() => {
     'GET /api/v1/health': () => ({ status: 'ok' }),
     'GET /api/v1/chains': () => [],
     'GET /api/v1/visits': () => [],
+    'GET /api/v1/gift-cards': () => [],
   })
 })
 

@@ -42,6 +42,11 @@ def list_gift_cards(session: SessionDep, chain_id: int | None = None) -> list[mo
     return list(session.scalars(stmt))
 
 
+@router.get("/{load_id}", response_model=GiftCardOut)
+def get_gift_card(load_id: int, session: SessionDep) -> models.GiftCardLoad:
+    return get_or_404(session, models.GiftCardLoad, load_id)
+
+
 @router.post("", response_model=GiftCardOut, status_code=201)
 def create_gift_card(body: GiftCardIn, session: SessionDep, today: TodayDep) -> models.GiftCardLoad:
     reject_future(body.date, today)

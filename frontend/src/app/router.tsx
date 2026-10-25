@@ -1,10 +1,7 @@
 import type { RouteObject } from 'react-router'
-import {
-  ActivityPage,
-  CreditFormPage,
-  GiftCardFormPage,
-  NotFoundPage,
-} from '../pages/placeholders'
+import { CreditFormPage } from '../pages/CreditFormPage'
+import { GiftCardFormPage } from '../pages/GiftCardFormPage'
+import { ActivityPage, NotFoundPage } from '../pages/placeholders'
 import { SettingsPage } from '../pages/SettingsPage'
 import { VisitFormPage } from '../pages/VisitFormPage'
 import { Layout } from './Layout'

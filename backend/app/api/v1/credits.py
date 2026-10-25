@@ -39,6 +39,11 @@ def list_credits(session: SessionDep) -> list[models.Credit]:
     return list(session.scalars(stmt))
 
 
+@router.get("/{credit_id}", response_model=CreditOut)
+def get_credit(credit_id: int, session: SessionDep) -> models.Credit:
+    return get_or_404(session, models.Credit, credit_id)
+
+
 @router.post("", response_model=CreditOut, status_code=201)
 def create_credit(body: CreditIn, session: SessionDep, today: TodayDep) -> models.Credit:
     _validate(body, session, today)

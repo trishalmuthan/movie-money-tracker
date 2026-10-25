@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { api } from './client'
 import { unwrap } from './errors'
+import { useInvalidateAll } from './invalidate'
 import type { components } from './schema'
 
 export type Chain = components['schemas']['ChainOut']
@@ -13,11 +14,6 @@ export function useChains() {
   })
 }
 
-/** Chain names show up across the app (activity, wallets), so refresh everything. */
-function useInvalidateAll() {
-  const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries()
-}
 
 export function useCreateChain() {
   const onSuccess = useInvalidateAll()

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useChains, type Chain } from '../api/chains'
-import { ApiError, errorMessage } from '../api/errors'
+import { fieldErrors } from '../api/errors'
 import {
   useSaveVisit,
   useVisit,
@@ -12,6 +12,7 @@ import {
 } from '../api/visits'
 import { primaryButton, quietButton } from '../components/buttons'
 import { Field } from '../components/Field'
+import { LoadProblem, NeedsChain } from '../components/LoadProblem'
 import { Page } from '../components/Page'
 import { RadioGroup } from '../components/RadioGroup'
 import { SelectField } from '../components/SelectField'
@@ -32,40 +33,12 @@ export function VisitFormPage({ mode }: { mode: 'new' | 'edit' }) {
   const visit = useVisit(id)
   const title = mode === 'new' ? 'Log a visit' : 'Edit visit'
 
-  if (visit.isError) {
-    const missing = visit.error instanceof ApiError && visit.error.status === 404
-    return (
-      <Page title={title}>
-        <p role="alert" className="text-warn">
-          {missing ? "This visit doesn't exist. It may have been deleted." : errorMessage(visit.error)}
-        </p>
-        <Link to="/" className="mt-4 inline-block text-brass underline underline-offset-4">
-          Go to Activity
-        </Link>
-      </Page>
-    )
-  }
-  if (chains.isError) {
-    return (
-      <Page title={title}>
-        <p role="alert" className="text-warn">
-          {errorMessage(chains.error)}
-        </p>
-      </Page>
-    )
-  }
+  if (visit.isError) return <LoadProblem title={title} what="visit" error={visit.error} />
+  if (chains.isError) return <LoadProblem title={title} what="visit" error={chains.error} />
   if (chains.isPending || visits.isPending || (id !== undefined && visit.isPending)) {
     return <Page title={title} intro="Loading…" />
   }
-  if (chains.data.length === 0) {
-    return (
-      <Page title={title} intro="Visits belong to a theatre chain, and there aren't any yet.">
-        <Link to="/settings" className="text-brass underline underline-offset-4">
-          Add a chain in Settings
-        </Link>
-      </Page>
-    )
-  }
+  if (chains.data.length === 0) return <NeedsChain title={title} what="Visits" />
 
   // Default a new visit to wherever you went last.
   const lastChainId = visits.data?.[0]?.chain_id ?? chains.data[0].id
@@ -81,7 +54,7 @@ type Errors = Partial<
 >
 
 // API field name → form field, for errors the server reports.
-const API_FIELDS: Record<string, keyof Errors> = {
+const API_FIELDS: Record<string, Exclude<keyof Errors, 'form'>> = {
   date: 'date',
   chain_id: 'chain',
   title: 'film',
@@ -171,15 +144,7 @@ function VisitForm({ id, chains, visit, defaultChainId }: VisitFormProps) {
       await save.mutateAsync(input)
       navigate('/')
     } catch (error) {
-      if (error instanceof ApiError && Object.keys(error.fields).length > 0) {
-        const mapped: Errors = {}
-        for (const [field, message] of Object.entries(error.fields)) {
-          mapped[API_FIELDS[field] ?? 'form'] = message
-        }
-        setErrors(mapped)
-      } else {
-        setErrors({ form: errorMessage(error) })
-      }
+      setErrors(fieldErrors(error, API_FIELDS))
     }
   }
 

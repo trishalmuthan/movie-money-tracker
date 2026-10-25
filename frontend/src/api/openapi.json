@@ -272,6 +272,46 @@
       }
     },
     "/api/v1/gift-cards/{load_id}": {
+      "get": {
+        "tags": [
+          "gift-cards"
+        ],
+        "summary": "Get Gift Card",
+        "operationId": "get_gift_card_api_v1_gift_cards__load_id__get",
+        "parameters": [
+          {
+            "name": "load_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Load Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GiftCardOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "gift-cards"
@@ -638,6 +678,46 @@
       }
     },
     "/api/v1/credits/{credit_id}": {
+      "get": {
+        "tags": [
+          "credits"
+        ],
+        "summary": "Get Credit",
+        "operationId": "get_credit_api_v1_credits__credit_id__get",
+        "parameters": [
+          {
+            "name": "credit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Credit Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreditOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "credits"

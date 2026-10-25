@@ -76,3 +76,10 @@ def test_missing_gift_card_is_404(client: TestClient) -> None:
     _chain(client)
     assert client.put("/api/v1/gift-cards/9", json=CARD).status_code == 404
     assert client.delete("/api/v1/gift-cards/9").status_code == 404
+
+
+def test_get_one_gift_card(client: TestClient) -> None:
+    _chain(client)
+    created = client.post("/api/v1/gift-cards", json=CARD).json()
+    assert client.get("/api/v1/gift-cards/1").json() == created
+    assert client.get("/api/v1/gift-cards/9").status_code == 404
