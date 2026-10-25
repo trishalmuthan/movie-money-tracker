@@ -71,41 +71,48 @@ def parse_sheet_csv(text: str) -> ParsedFile:
     """Rows from the first four columns. A row with any unreadable value becomes errors instead."""
     rows: list[SheetRow] = []
     errors: list[RowError] = []
-    reader = csv.reader(io.StringIO(text.removeprefix("﻿")))
+    reader = csv.reader(io.StringIO(text.removeprefix("\ufeff")))
     for line, record in enumerate(reader, start=1):
         cells = [cell.strip() for cell in (record + [""] * 4)[:4]]
         if not any(cells):
             continue
         if line == 1 and cells[0].lower() == "item":
             continue
-        item, cost_text, tickets_text, date_text = cells
-        row_errors: list[RowError] = []
-
-        def fail(column: str, value: str, message: str) -> None:
-            row_errors.append(RowError(line, item, column, value, message))
-
-        if not item:
-            fail("Item", item, "The item is empty")
-        cost: Cents | None = None
-        try:
-            cost = parse_dollars(cost_text)
-        except ValueError:
-            fail("Net Cost", cost_text, "Not an amount, like 5.00 or -7.17")
-        tickets: int | None = None
-        if tickets_text:
-            if tickets_text.isdigit():
-                tickets = int(tickets_text)
-            else:
-                fail("Number of Tickets", tickets_text, "Not a whole number of tickets")
-        date = _parse_date(date_text)
-        if date is None:
-            fail("Date", date_text, "Not a date, like 5/22/2025")
-
-        if row_errors or cost is None or date is None:
-            errors.extend(row_errors)
+        result = _parse_record(line, *cells)
+        if isinstance(result, SheetRow):
+            rows.append(result)
         else:
-            rows.append(SheetRow(line, item, cost, tickets, date))
+            errors.extend(result)
     return ParsedFile(tuple(rows), tuple(errors))
+
+
+def _parse_record(
+    line: int, item: str, cost_text: str, tickets_text: str, date_text: str
+) -> SheetRow | list[RowError]:
+    """One CSV record as a row, or every problem with it (so all of them can be fixed at once)."""
+    problems: list[RowError] = []
+    if not item:
+        problems.append(RowError(line, item, "Item", item, "The item is empty"))
+    cost: Cents | None = None
+    try:
+        cost = parse_dollars(cost_text)
+    except ValueError:
+        problems.append(
+            RowError(line, item, "Net Cost", cost_text, "Not an amount, like 5.00 or -7.17")
+        )
+    tickets: int | None = None
+    if tickets_text.isdigit():
+        tickets = int(tickets_text)
+    elif tickets_text:
+        problems.append(
+            RowError(line, item, "Number of Tickets", tickets_text, "Not a whole number of tickets")
+        )
+    date = _parse_date(date_text)
+    if date is None:
+        problems.append(RowError(line, item, "Date", date_text, "Not a date, like 5/22/2025"))
+    if problems or cost is None or date is None:
+        return problems
+    return SheetRow(line, item, cost, tickets, date)
 
 
 def _parse_date(text: str) -> dt.date | None:
