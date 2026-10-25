@@ -127,6 +127,7 @@ def test_rows_on_or_after_the_cutoff_are_listed_not_imported() -> None:
     assert "Bugonia" not in [v.title for v in p.visits]
     assert [c.chain_id for c in p.cards] == [CINEMARK]
     t2025, t2026 = p.totals
+    assert (t2025.rows, t2026.rows) == (7, 2)  # the mystery row counts
     # The legacy total is the whole file, cutoff or not, so it still matches the sheet.
     assert (t2025.legacy_total, t2025.tickets) == (1199 - 717 + 500 + 0 + 4000 + 175, 8)
     assert (t2025.imported_total, t2025.imported_tickets) == (1199 - 717 + 500 + 0 + 4000, 6)

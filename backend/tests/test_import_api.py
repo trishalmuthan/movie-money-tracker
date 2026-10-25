@@ -70,6 +70,7 @@ def test_preview_proposes_without_writing(client: TestClient, db: Session) -> No
     assert proposal["totals"] == [
         {
             "name": "2026.csv",
+            "rows": 6,
             "legacy_total": 599 + 3500 + 2600 - 717 + 599,
             "tickets": 5,
             "imported_total": 599 + 3500 + 2600 - 717 + 599,
@@ -105,6 +106,7 @@ def test_commit_writes_everything_once(client: TestClient, db: Session) -> None:
     assert result["files"] == [
         {
             "name": "2026.csv",
+            "rows": 6,
             "legacy_total": 6581,
             "tickets": 5,
             "imported_total": 6581,

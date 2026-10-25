@@ -3,7 +3,7 @@ from dataclasses import asdict
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -140,8 +140,8 @@ class ImportBlocker(BaseModel):
 
 
 class ImportFileTotals(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     name: str
+    rows: int
     legacy_total: int  # every readable row, cutoff or not: compare with the sheet's own total
     tickets: int
     imported_total: int
@@ -257,6 +257,7 @@ def _import_out(session: Session, record: models.Import) -> ImportOut:
         files=[
             ImportFileTotals(
                 name=f.name,
+                rows=f.rows,
                 legacy_total=f.legacy_total,
                 tickets=f.ticket_total,
                 imported_total=f.imported_total,

@@ -151,6 +151,7 @@ class ImportFile(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     import_id: Mapped[int] = mapped_column(ForeignKey("imports.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(200))
+    rows: Mapped[int]
     legacy_total: Mapped[int]
     ticket_total: Mapped[int]
     imported_total: Mapped[int]

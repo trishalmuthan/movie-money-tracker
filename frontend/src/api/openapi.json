@@ -2057,6 +2057,10 @@
             "type": "string",
             "title": "Name"
           },
+          "rows": {
+            "type": "integer",
+            "title": "Rows"
+          },
           "legacy_total": {
             "type": "integer",
             "title": "Legacy Total"
@@ -2077,6 +2081,7 @@
         "type": "object",
         "required": [
           "name",
+          "rows",
           "legacy_total",
           "tickets",
           "imported_total",
