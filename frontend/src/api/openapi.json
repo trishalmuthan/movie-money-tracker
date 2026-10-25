@@ -1290,6 +1290,118 @@
           }
         }
       }
+    },
+    "/api/v1/import": {
+      "get": {
+        "tags": [
+          "import"
+        ],
+        "summary": "Get Import",
+        "description": "The committed import, or null if the sheet hasn't been imported yet.",
+        "operationId": "get_import_api_v1_import_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ImportOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Import Api V1 Import Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/import/preview": {
+      "post": {
+        "tags": [
+          "import"
+        ],
+        "summary": "Preview Import",
+        "operationId": "preview_import_api_v1_import_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportProposal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/import/commit": {
+      "post": {
+        "tags": [
+          "import"
+        ],
+        "summary": "Commit Import",
+        "operationId": "commit_import_api_v1_import_commit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1701,6 +1813,750 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "ImportBlocker": {
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ImportRowKey"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "message"
+        ],
+        "title": "ImportBlocker"
+      },
+      "ImportCard": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ImportRowKey"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "chain_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Id"
+          },
+          "price_paid": {
+            "type": "integer",
+            "title": "Price Paid"
+          },
+          "face_value": {
+            "type": "integer",
+            "title": "Face Value"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "date",
+          "chain_id",
+          "price_paid",
+          "face_value",
+          "confirmed"
+        ],
+        "title": "ImportCard"
+      },
+      "ImportChainSpan": {
+        "properties": {
+          "until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          },
+          "chain_id": {
+            "type": "integer",
+            "title": "Chain Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "until",
+          "chain_id"
+        ],
+        "title": "ImportChainSpan"
+      },
+      "ImportChoices": {
+        "properties": {
+          "cutoff": {
+            "type": "string",
+            "format": "date",
+            "title": "Cutoff"
+          },
+          "chain_rule": {
+            "items": {
+              "$ref": "#/components/schemas/ImportChainSpan"
+            },
+            "type": "array",
+            "title": "Chain Rule"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRowChoice"
+            },
+            "type": "array",
+            "title": "Rows",
+            "default": []
+          },
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFix"
+            },
+            "type": "array",
+            "title": "Fixes",
+            "default": []
+          },
+          "periods": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ImportPeriod"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periods"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cutoff",
+          "chain_rule"
+        ],
+        "title": "ImportChoices"
+      },
+      "ImportCredit": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ImportRowKey"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "chain_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/CreditDestination"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "date",
+          "chain_id",
+          "amount",
+          "destination"
+        ],
+        "title": "ImportCredit"
+      },
+      "ImportFee": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ImportRowKey"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "chain_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "payment_source": {
+            "$ref": "#/components/schemas/PaymentSource"
+          },
+          "period_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Index"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "date",
+          "chain_id",
+          "amount",
+          "payment_source",
+          "period_index"
+        ],
+        "title": "ImportFee"
+      },
+      "ImportFileTotals": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "legacy_total": {
+            "type": "integer",
+            "title": "Legacy Total"
+          },
+          "tickets": {
+            "type": "integer",
+            "title": "Tickets"
+          },
+          "imported_total": {
+            "type": "integer",
+            "title": "Imported Total"
+          },
+          "imported_tickets": {
+            "type": "integer",
+            "title": "Imported Tickets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "legacy_total",
+          "tickets",
+          "imported_total",
+          "imported_tickets"
+        ],
+        "title": "ImportFileTotals"
+      },
+      "ImportFix": {
+        "properties": {
+          "file": {
+            "type": "integer",
+            "title": "File"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "column": {
+            "type": "string",
+            "enum": [
+              "Item",
+              "Net Cost",
+              "Number of Tickets",
+              "Date"
+            ],
+            "title": "Column"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "line",
+          "column",
+          "value"
+        ],
+        "title": "ImportFix"
+      },
+      "ImportIn": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ImportSheetFile"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Files"
+          },
+          "choices": {
+            "$ref": "#/components/schemas/ImportChoices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "files",
+          "choices"
+        ],
+        "title": "ImportIn"
+      },
+      "ImportLeftOut": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ImportRowKey"
+          },
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "after_cutoff",
+              "skipped"
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "item",
+          "date",
+          "reason"
+        ],
+        "title": "ImportLeftOut"
+      },
+      "ImportOut": {
+        "properties": {
+          "committed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Committed At"
+          },
+          "cutoff": {
+            "type": "string",
+            "format": "date",
+            "title": "Cutoff"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFileTotals"
+            },
+            "type": "array",
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "committed_at",
+          "cutoff",
+          "files"
+        ],
+        "title": "ImportOut"
+      },
+      "ImportPeriod": {
+        "properties": {
+          "chain_id": {
+            "type": "integer",
+            "title": "Chain Id"
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          },
+          "billing_day": {
+            "type": "integer",
+            "title": "Billing Day"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "payment_source": {
+            "$ref": "#/components/schemas/PaymentSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chain_id",
+          "amount",
+          "billing_day",
+          "start_date",
+          "end_date",
+          "payment_source"
+        ],
+        "title": "ImportPeriod"
+      },
+      "ImportProposal": {
+        "properties": {
+          "visits": {
+            "items": {
+              "$ref": "#/components/schemas/ImportVisit"
+            },
+            "type": "array",
+            "title": "Visits"
+          },
+          "credits": {
+            "items": {
+              "$ref": "#/components/schemas/ImportCredit"
+            },
+            "type": "array",
+            "title": "Credits"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/ImportCard"
+            },
+            "type": "array",
+            "title": "Cards"
+          },
+          "fees": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFee"
+            },
+            "type": "array",
+            "title": "Fees"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/ImportPeriod"
+            },
+            "type": "array",
+            "title": "Periods"
+          },
+          "left_out": {
+            "items": {
+              "$ref": "#/components/schemas/ImportLeftOut"
+            },
+            "type": "array",
+            "title": "Left Out"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRowError"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "blockers": {
+            "items": {
+              "$ref": "#/components/schemas/ImportBlocker"
+            },
+            "type": "array",
+            "title": "Blockers"
+          },
+          "totals": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFileTotals"
+            },
+            "type": "array",
+            "title": "Totals"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visits",
+          "credits",
+          "cards",
+          "fees",
+          "periods",
+          "left_out",
+          "errors",
+          "blockers",
+          "totals",
+          "ready"
+        ],
+        "title": "ImportProposal"
+      },
+      "ImportRowChoice": {
+        "properties": {
+          "file": {
+            "type": "integer",
+            "title": "File"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "skip": {
+            "type": "boolean",
+            "title": "Skip",
+            "default": false
+          },
+          "chain_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Id"
+          },
+          "face_value": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Face Value"
+          },
+          "my_cost": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Cost"
+          },
+          "guest_cost": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Guest Cost"
+          },
+          "payment_source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refund_destination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CreditDestination"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "line"
+        ],
+        "title": "ImportRowChoice"
+      },
+      "ImportRowError": {
+        "properties": {
+          "file": {
+            "type": "integer",
+            "title": "File"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "column": {
+            "type": "string",
+            "title": "Column"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "line",
+          "item",
+          "column",
+          "value",
+          "message"
+        ],
+        "title": "ImportRowError"
+      },
+      "ImportRowKey": {
+        "properties": {
+          "file": {
+            "type": "integer",
+            "title": "File"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "line"
+        ],
+        "title": "ImportRowKey"
+      },
+      "ImportSheetFile": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000000,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "text"
+        ],
+        "title": "ImportSheetFile"
+      },
+      "ImportVisit": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ImportRowKey"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "chain_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "my_cost": {
+            "type": "integer",
+            "title": "My Cost"
+          },
+          "guest_count": {
+            "type": "integer",
+            "title": "Guest Count"
+          },
+          "guest_cost": {
+            "type": "integer",
+            "title": "Guest Cost"
+          },
+          "payment_source": {
+            "$ref": "#/components/schemas/PaymentSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "date",
+          "chain_id",
+          "title",
+          "my_cost",
+          "guest_count",
+          "guest_cost",
+          "payment_source"
+        ],
+        "title": "ImportVisit"
       },
       "PaymentSource": {
         "type": "string",

@@ -5,6 +5,7 @@ import datetime as dt
 import pytest
 
 from app.domain.importing import (
+    COLUMNS,
     FeeRow,
     GiftCardRow,
     RowError,
@@ -150,3 +151,11 @@ def test_fixes_replace_cells_before_parsing() -> None:
     )
     assert parsed.errors == ()
     assert (parsed.rows[-1].net_cost, parsed.rows[-1].date) == (250, D(2025, 8, 1))
+
+
+def test_columns_match_the_import_api() -> None:
+    from typing import get_args
+
+    from app.api.v1.imports import Column
+
+    assert get_args(Column) == COLUMNS
