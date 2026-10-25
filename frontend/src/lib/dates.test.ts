@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { monthLabel, shortDate, todayIso } from './dates'
+import { longDate, monthLabel, ordinal, shortDate, todayIso } from './dates'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -28,5 +28,20 @@ describe('labels', () => {
 
   it('names a month', () => {
     expect(monthLabel('2026-02')).toBe('February 2026')
+  })
+})
+
+describe('longDate', () => {
+  it('includes the year, without shifting the day', () => {
+    expect(longDate('2026-01-01')).toBe('Jan 1, 2026')
+    expect(longDate('2026-05-31')).toBe('May 31, 2026')
+  })
+})
+
+describe('ordinal', () => {
+  it('suffixes billing days', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 28].map(ordinal)).toEqual([
+      '1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd', '23rd', '28th',
+    ])
   })
 })
