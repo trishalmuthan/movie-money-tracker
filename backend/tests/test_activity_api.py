@@ -62,6 +62,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "amount": -717,
             "payment_source": "bank",
             "effective_cost": None,
+            "is_overridden": False,
         },
         {
             "kind": "visit",
@@ -72,6 +73,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "amount": 500,
             "payment_source": "bank",
             "effective_cost": 500,
+            "is_overridden": False,
         },
         {
             "kind": "visit",
@@ -82,6 +84,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "amount": 2600,
             "payment_source": "gift_card",
             "effective_cost": 1820,
+            "is_overridden": False,
         },
         {
             "kind": "gift_card",
@@ -92,6 +95,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "amount": 3500,
             "payment_source": None,
             "effective_cost": 3500,
+            "is_overridden": False,
         },
     ]
 
@@ -121,13 +125,19 @@ def test_activity_filters(client: TestClient) -> None:
     assert kinds == ["visit", "visit"]
     assert client.get("/api/v1/activity?chain_id=2").json() == []
     assert client.get("/api/v1/activity?month=2026-13").status_code == 422
-    assert client.get("/api/v1/activity?kind=fee").status_code == 422
+    assert client.get("/api/v1/activity?kind=bogus").status_code == 422
 
 
 def test_wallets_show_balance_per_chain(client: TestClient) -> None:
     _seed(client)
     assert client.get("/api/v1/wallets").json() == [
-        {"chain_id": 1, "chain_name": "Regal", "balance": 5000 - 2600, "uncovered": 0}
+        {
+            "chain_id": 1,
+            "chain_name": "Regal",
+            "balance": 5000 - 2600,
+            "uncovered": 0,
+            "runway_months": None,
+        }
     ]
 
 
@@ -145,7 +155,13 @@ def test_spending_without_card_money_shows_as_uncovered(client: TestClient) -> N
         },
     )
     assert client.get("/api/v1/wallets").json() == [
-        {"chain_id": 1, "chain_name": "Cinemark", "balance": -500, "uncovered": 500}
+        {
+            "chain_id": 1,
+            "chain_name": "Cinemark",
+            "balance": -500,
+            "uncovered": 500,
+            "runway_months": None,
+        }
     ]
     assert client.get("/api/v1/activity").json()[0]["effective_cost"] == 500
 

@@ -18,11 +18,12 @@ import { formatCents } from '../lib/money'
 
 const KINDS: { value: EntryKind; label: string; singular: string }[] = [
   { value: 'visit', label: 'Visits', singular: 'Visit' },
+  { value: 'fee', label: 'Fees', singular: 'Fee' },
   { value: 'gift_card', label: 'Gift cards', singular: 'Gift card' },
   { value: 'credit', label: 'Refunds', singular: 'Refund' },
 ]
 
-const EDIT_PATH: Record<EntryKind, string> = {
+const EDIT_PATH: Record<Exclude<EntryKind, 'fee'>, string> = {
   visit: 'visits',
   gift_card: 'gift-cards',
   credit: 'credits',
@@ -218,7 +219,7 @@ function MonthSection({ month, entries, chainNames }: MonthSectionProps) {
 }
 
 function describeSource(entry: ActivityEntry): string | undefined {
-  if (entry.kind === 'visit') {
+  if (entry.kind === 'visit' || entry.kind === 'fee') {
     return { free: 'Free', gift_card: 'Paid with gift card', bank: 'Paid by bank' }[
       entry.payment_source ?? ''
     ]
@@ -238,6 +239,8 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
     entry.chain_id !== null ? chainNames.get(entry.chain_id) : undefined,
     describeSource(entry),
   ].filter(Boolean)
+  // Fees are edited, never deleted; their form arrives with #49.
+  const target = entry.kind === 'fee' ? null : { kind: entry.kind, id: entry.id }
   const differs = entry.effective_cost !== null && entry.effective_cost !== entry.amount
 
   return (
@@ -246,45 +249,47 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
       <div className="min-w-0 flex-1">
         <p className="break-words">{entry.description}</p>
         <p className="text-sm text-dim">{meta.join(', ')}</p>
-        <div className="-ml-2 flex flex-wrap items-center gap-1">
-          {confirming ? (
-            <>
-              <span className="ml-2 text-sm">Delete this {kindLabel.toLowerCase()}?</span>
-              <button
-                type="button"
-                className={dangerButton}
-                disabled={remove.isPending}
-                onClick={() => remove.mutate(entry)}
-              >
-                Yes, delete
-              </button>
-              <button type="button" className={quietButton} onClick={() => setConfirming(false)}>
-                Keep it
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to={`/${EDIT_PATH[entry.kind]}/${entry.id}/edit`}
-                className={quietButton}
-                aria-label={`Edit ${entry.description}`}
-              >
-                Edit
-              </Link>
-              <button
-                type="button"
-                className={quietButton}
-                aria-label={`Delete ${entry.description}`}
-                onClick={() => {
-                  remove.reset()
-                  setConfirming(true)
-                }}
-              >
-                Delete
-              </button>
-            </>
-          )}
-        </div>
+        {target && (
+          <div className="-ml-2 flex flex-wrap items-center gap-1">
+            {confirming ? (
+              <>
+                <span className="ml-2 text-sm">Delete this {kindLabel.toLowerCase()}?</span>
+                <button
+                  type="button"
+                  className={dangerButton}
+                  disabled={remove.isPending}
+                  onClick={() => remove.mutate(target)}
+                >
+                  Yes, delete
+                </button>
+                <button type="button" className={quietButton} onClick={() => setConfirming(false)}>
+                  Keep it
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to={`/${EDIT_PATH[target.kind]}/${target.id}/edit`}
+                  className={quietButton}
+                  aria-label={`Edit ${entry.description}`}
+                >
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  className={quietButton}
+                  aria-label={`Delete ${entry.description}`}
+                  onClick={() => {
+                    remove.reset()
+                    setConfirming(true)
+                  }}
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        )}
         {remove.isError && (
           <p role="alert" className="text-sm text-warn">
             {errorMessage(remove.error)}

@@ -1,13 +1,19 @@
 """Load the database into the pure domain Ledger."""
 
+import datetime as dt
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import models
 from app.domain import types as domain
+from app.services.fees import ensure_fee_charges
 
 
-def load_ledger(session: Session) -> domain.Ledger:
+def load_ledger(session: Session, today: dt.date) -> domain.Ledger:
+    """Generate any fees now due (and commit them), then read everything."""
+    ensure_fee_charges(session, today)
+    session.commit()
     return domain.Ledger(
         chains=tuple(
             domain.Chain(c.id, c.name, c.standard_ticket_price)
@@ -17,8 +23,14 @@ def load_ledger(session: Session) -> domain.Ledger:
             domain.GiftCardLoad(g.id, g.chain_id, g.date, g.price_paid, g.face_value)
             for g in session.scalars(select(models.GiftCardLoad))
         ),
-        # Fee charges join the ledger with subscriptions (M3).
-        fees=(),
+        fees=tuple(
+            domain.FeeCharge(f.id, chain_id, f.date, f.amount, f.payment_source)
+            for f, chain_id in session.execute(
+                select(models.FeeCharge, models.SubscriptionPlan.chain_id).join(
+                    models.SubscriptionPlan
+                )
+            )
+        ),
         visits=tuple(
             domain.Visit(
                 v.id, v.chain_id, v.date, v.my_cost, v.guest_count, v.guest_cost, v.payment_source

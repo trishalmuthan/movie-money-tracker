@@ -6,7 +6,7 @@ import { renderRoutes } from '../test/renderRoutes'
 import { ActivityPage } from './ActivityPage'
 
 type Entry = {
-  kind: 'visit' | 'gift_card' | 'credit'
+  kind: 'visit' | 'fee' | 'gift_card' | 'credit'
   id: number
   date: string
   chain_id: number | null
@@ -71,6 +71,21 @@ describe('Activity', () => {
     // Effective cost only shows when it differs from the amount.
     const bankVisit = screen.getByRole('listitem', { name: /How to Make a Killing/ })
     expect(within(bankVisit).queryByText(/really/)).not.toBeInTheDocument()
+  })
+
+  it('shows subscription fees, without actions until the fee form exists', async () => {
+    activityApi({
+      entries: [
+        { kind: 'fee', id: 1, date: '2026-01-22', chain_id: 1, description: 'Regal subscription', amount: 599, payment_source: 'gift_card', effective_cost: 419 },
+        ...SCENARIO,
+      ],
+    })
+    renderRoutes(ROUTES, '/activity')
+    const fee = await screen.findByRole('listitem', { name: 'Regal subscription' })
+    expect(within(fee).getByText('Fee, Regal, Paid with gift card')).toBeInTheDocument()
+    expect(within(fee).getByText('really $4.19')).toBeInTheDocument()
+    expect(within(fee).queryByRole('link', { name: /Edit/ })).not.toBeInTheDocument()
+    expect(within(fee).queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument()
   })
 
   it('shows each wallet balance', async () => {
