@@ -6,10 +6,14 @@ import { LoadProblem, NeedsChain } from '../../components/LoadProblem'
 import { Page } from '../../components/Page'
 import { todayIso } from '../../lib/dates'
 import { defaultChainRule } from '../../lib/importChoices'
+import { CardsStep } from './CardsStep'
+import { CommitStep } from './CommitStep'
 import { FilesStep } from './FilesStep'
 import { ImportSummary } from './ImportSummary'
+import { PeriodsStep } from './PeriodsStep'
 import { ProblemsStep } from './ProblemsStep'
 import { RulesStep } from './RulesStep'
+import { VisitsStep } from './VisitsStep'
 
 const TITLE = 'Import your sheet'
 const INTRO =
@@ -68,7 +72,13 @@ function ImportFlow({ chains }: { chains: Chain[] }) {
             </p>
           )}
           {preview.data && (
-            <ProblemsStep files={files} proposal={preview.data} choices={choices} onChange={setChoices} />
+            <>
+              <ProblemsStep files={files} proposal={preview.data} choices={choices} onChange={setChoices} />
+              <CardsStep chains={chains} proposal={preview.data} choices={choices} onChange={setChoices} />
+              <VisitsStep chains={chains} proposal={preview.data} choices={choices} onChange={setChoices} />
+              <PeriodsStep chains={chains} proposal={preview.data} choices={choices} onChange={setChoices} />
+              <CommitStep files={files} choices={choices} proposal={preview.data} />
+            </>
           )}
         </>
       )}

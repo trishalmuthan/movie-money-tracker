@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockApi } from '../test/mockApi'
-import { renderWithQuery } from '../test/render'
+import { renderRoutes } from '../test/renderRoutes'
 import { SettingsPage } from './SettingsPage'
 
 type Chain = { id: number; name: string; standard_ticket_price: number }
@@ -17,6 +17,7 @@ function chainsApi(initial: Chain[] = [], { inUse = [] as number[] } = {}) {
   return mockApi({
     'GET /api/v1/health': () => ({ status: 'ok' }),
     'GET /api/v1/plans': () => [],
+    'GET /api/v1/import': () => null,
     'GET /api/v1/chains': () => [...chains].sort((a, b) => a.name.localeCompare(b.name)),
     'POST /api/v1/chains': ({ body }) => {
       const input = body as Omit<Chain, 'id'>
@@ -54,6 +55,8 @@ function chainsApi(initial: Chain[] = [], { inUse = [] as number[] } = {}) {
   })
 }
 
+const renderSettings = () => renderRoutes([{ path: '/settings', element: <SettingsPage /> }], '/settings')
+
 const REGAL: Chain = { id: 1, name: 'Regal', standard_ticket_price: 1500 }
 
 afterEach(() => {
@@ -63,20 +66,20 @@ afterEach(() => {
 describe('Settings → chains', () => {
   it('invites you to add a first chain when there are none', async () => {
     chainsApi()
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     expect(await screen.findByText(/No chains yet/)).toBeInTheDocument()
   })
 
   it('lists chains with their ticket price in dollars', async () => {
     chainsApi([REGAL])
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const row = await screen.findByRole('listitem', { name: 'Regal' })
     expect(within(row).getByText('$15.00')).toBeInTheDocument()
   })
 
   it('adds a chain, storing the price in cents', async () => {
     const api = chainsApi()
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     await user.type(await screen.findByLabelText('Chain name'), 'Regal')
     await user.type(screen.getByLabelText('Ticket price'), '15.00')
@@ -92,7 +95,7 @@ describe('Settings → chains', () => {
 
   it('rejects a price that is not a dollar amount, without calling the API', async () => {
     const api = chainsApi()
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     await user.type(await screen.findByLabelText('Chain name'), 'Regal')
     await user.type(screen.getByLabelText('Ticket price'), '15.5.0')
@@ -105,7 +108,7 @@ describe('Settings → chains', () => {
 
   it('shows a duplicate name on the name field', async () => {
     chainsApi([REGAL])
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     await user.type(await screen.findByLabelText('Chain name'), 'regal')
     await user.type(screen.getByLabelText('Ticket price'), '15')
@@ -117,7 +120,7 @@ describe('Settings → chains', () => {
 
   it('edits a chain in place', async () => {
     const api = chainsApi([REGAL])
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     const row = await screen.findByRole('listitem', { name: 'Regal' })
     await user.click(within(row).getByRole('button', { name: 'Edit Regal' }))
@@ -137,7 +140,7 @@ describe('Settings → chains', () => {
 
   it('cancels an edit without saving', async () => {
     const api = chainsApi([REGAL])
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     const row = await screen.findByRole('listitem', { name: 'Regal' })
     await user.click(within(row).getByRole('button', { name: 'Edit Regal' }))
@@ -148,7 +151,7 @@ describe('Settings → chains', () => {
 
   it('deletes an unused chain after confirming', async () => {
     const api = chainsApi([REGAL])
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     const row = await screen.findByRole('listitem', { name: 'Regal' })
     await user.click(within(row).getByRole('button', { name: 'Delete Regal' }))
@@ -160,7 +163,7 @@ describe('Settings → chains', () => {
 
   it('keeps a chain that still has entries and says why', async () => {
     chainsApi([REGAL], { inUse: [1] })
-    renderWithQuery(<SettingsPage />)
+    renderSettings()
     const user = userEvent.setup()
     const row = await screen.findByRole('listitem', { name: 'Regal' })
     await user.click(within(row).getByRole('button', { name: 'Delete Regal' }))
@@ -168,5 +171,25 @@ describe('Settings → chains', () => {
 
     expect(await within(row).findByRole('alert')).toHaveTextContent('still has entries')
     expect(screen.getByRole('listitem', { name: 'Regal' })).toBeInTheDocument()
+  })
+})
+
+describe('Settings → your sheet', () => {
+  it('links to the import until the sheet has been imported', async () => {
+    chainsApi([REGAL])
+    renderSettings()
+    expect(await screen.findByRole('link', { name: 'Import your sheet' })).toHaveAttribute('href', '/import')
+  })
+
+  it('says when the sheet was imported', async () => {
+    mockApi({
+      'GET /api/v1/chains': () => [REGAL],
+      'GET /api/v1/plans': () => [],
+      'GET /api/v1/import': () => ({ committed_at: '2026-10-25T21:04:00', cutoff: '2026-10-25', files: [] }),
+    })
+    renderSettings()
+    expect(await screen.findByText(/Imported on Oct 25, 2026\./)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'See what came in' })).toHaveAttribute('href', '/import')
+    expect(screen.queryByRole('link', { name: 'Import your sheet' })).not.toBeInTheDocument()
   })
 })
