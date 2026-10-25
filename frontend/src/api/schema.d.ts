@@ -82,7 +82,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Gift Card */
+        get: operations["get_gift_card_api_v1_gift_cards__load_id__get"];
         /** Update Gift Card */
         put: operations["update_gift_card_api_v1_gift_cards__load_id__put"];
         post?: never;
@@ -155,7 +156,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get Credit */
+        get: operations["get_credit_api_v1_credits__credit_id__get"];
         /** Update Credit */
         put: operations["update_credit_api_v1_credits__credit_id__put"];
         post?: never;
@@ -622,6 +624,37 @@ export interface operations {
             };
         };
     };
+    get_gift_card_api_v1_gift_cards__load_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                load_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GiftCardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     update_gift_card_api_v1_gift_cards__load_id__put: {
         parameters: {
             query?: never;
@@ -880,6 +913,37 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreditOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_credit_api_v1_credits__credit_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credit_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

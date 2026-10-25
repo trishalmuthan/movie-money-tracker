@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { api } from './client'
 import { unwrap } from './errors'
+import { useInvalidateAll } from './invalidate'
 import type { components } from './schema'
 
 export type Visit = components['schemas']['VisitOut']
@@ -23,11 +24,6 @@ export function useVisit(id: number | undefined) {
   })
 }
 
-/** A visit changes activity, wallets and effective costs, so refresh everything. */
-function useInvalidateAll() {
-  const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries()
-}
 
 export function useSaveVisit(id: number | undefined) {
   const onSuccess = useInvalidateAll()

@@ -50,3 +50,21 @@ export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message
   return "Can't reach the app's server. Make sure the backend is running, then try again."
 }
+
+/**
+ * Spread an error over a form's fields: API field names are renamed via `map`
+ * (e.g. chain_id → chain); anything without a field becomes the `form` error.
+ */
+export function fieldErrors<F extends string>(
+  error: unknown,
+  map: Partial<Record<string, F>>,
+): Partial<Record<F | 'form', string>> {
+  if (!(error instanceof ApiError) || Object.keys(error.fields).length === 0) {
+    return { form: errorMessage(error) } as Partial<Record<F | 'form', string>>
+  }
+  const result: Partial<Record<F | 'form', string>> = {}
+  for (const [apiField, message] of Object.entries(error.fields)) {
+    result[map[apiField] ?? 'form'] ??= message
+  }
+  return result
+}

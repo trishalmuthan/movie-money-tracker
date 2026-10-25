@@ -63,3 +63,10 @@ def test_update_and_delete(client: TestClient) -> None:
     assert client.delete("/api/v1/credits/1").status_code == 204
     assert client.get("/api/v1/credits").json() == []
     assert client.delete("/api/v1/credits/1").status_code == 404
+
+
+def test_get_one_credit(client: TestClient) -> None:
+    _chain(client)
+    created = client.post("/api/v1/credits", json=CREDIT).json()
+    assert client.get("/api/v1/credits/1").json() == created
+    assert client.get("/api/v1/credits/9").status_code == 404
