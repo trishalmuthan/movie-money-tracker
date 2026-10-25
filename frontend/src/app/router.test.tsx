@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { stubFetchJson } from '../test/render'
+import { mockApi } from '../test/mockApi'
 import { routes } from './router'
 
 function renderAt(path: string) {
@@ -17,7 +17,10 @@ function renderAt(path: string) {
 }
 
 beforeEach(() => {
-  stubFetchJson({ status: 'ok' })
+  mockApi({
+    'GET /api/v1/health': () => ({ status: 'ok' }),
+    'GET /api/v1/chains': () => [],
+  })
 })
 
 afterEach(() => {
