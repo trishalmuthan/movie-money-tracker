@@ -29,7 +29,7 @@ def get_or_404[M](session: Session, model: type[M], id_: int) -> M:
     return instance
 
 
-def _field_error(field: str, msg: str, value: object) -> HTTPException:
+def field_error(field: str, msg: str, value: object) -> HTTPException:
     """A 422 shaped like FastAPI's own validation errors, so clients handle both alike."""
     return HTTPException(
         status_code=422,
@@ -39,9 +39,9 @@ def _field_error(field: str, msg: str, value: object) -> HTTPException:
 
 def require_chain(session: Session, chain_id: int) -> None:
     if session.get(models.Chain, chain_id) is None:
-        raise _field_error("chain_id", f"Unknown chain {chain_id}", chain_id)
+        raise field_error("chain_id", f"Unknown chain {chain_id}", chain_id)
 
 
 def reject_future(day: dt.date, today: dt.date, field: str = "date") -> None:
     if day > today:
-        raise _field_error(field, "Date cannot be in the future", day.isoformat())
+        raise field_error(field, "Date cannot be in the future", day.isoformat())

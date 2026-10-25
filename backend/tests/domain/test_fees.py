@@ -1,6 +1,14 @@
 import datetime as dt
 
-from app.domain.fees import billing_dates
+from app.domain.fees import (
+    ChargeSync,
+    DueCharge,
+    PlanTerms,
+    StoredCharge,
+    billing_dates,
+    sync_charges,
+)
+from app.domain.types import PaymentSource
 
 D = dt.date
 REFERENCE_START = D(2026, 1, 1)
@@ -41,3 +49,50 @@ def test_future_start_bills_nothing_yet() -> None:
 def test_crosses_year_boundaries() -> None:
     dates = billing_dates(D(2025, 11, 1), None, 1, today=D(2026, 2, 1))
     assert dates == [D(2025, 11, 1), D(2025, 12, 1), D(2026, 1, 1), D(2026, 2, 1)]
+
+
+# --- sync_charges: what generation does to one plan's stored charges ---
+
+GIFT = PaymentSource.GIFT_CARD
+REFERENCE = PlanTerms(REFERENCE_START, None, 22, 599, GIFT)
+TODAY = D(2026, 10, 15)
+
+
+def _stored(month: int, *, id_: int | None = None, amount: int = 599, overridden: bool = False):
+    return StoredCharge(
+        id_ or month, f"2026-{month:02d}", D(2026, month, 22), amount, GIFT, overridden
+    )
+
+
+def test_creates_every_due_month_for_a_new_plan() -> None:
+    sync = sync_charges(REFERENCE, [], TODAY)
+    assert [c.month for c in sync.create] == [f"2026-{m:02d}" for m in range(1, 10)]
+    assert sync.create[0] == DueCharge("2026-01", D(2026, 1, 22), 599, GIFT)
+    assert (sync.update, sync.delete, sync.stranded) == ((), (), ())
+
+
+def test_running_again_changes_nothing() -> None:
+    first = sync_charges(REFERENCE, [], TODAY)
+    stored = [
+        StoredCharge(i, c.month, c.date, c.amount, c.payment_source, False)
+        for i, c in enumerate(first.create)
+    ]
+    assert sync_charges(REFERENCE, stored, TODAY) == ChargeSync((), (), (), ())
+
+
+def test_plan_edits_flow_into_generated_charges_but_not_overridden_ones() -> None:
+    edited = PlanTerms(REFERENCE_START, None, 15, 699, PaymentSource.BANK)
+    sync = sync_charges(edited, [_stored(1), _stored(2, overridden=True, amount=0)], TODAY)
+    assert sync.update == ((1, DueCharge("2026-01", D(2026, 1, 15), 699, PaymentSource.BANK)),)
+    assert [c.month for c in sync.create] == [
+        f"2026-{m:02d}" for m in range(3, 11)
+    ]  # Oct 15 now due
+
+
+def test_charges_outside_the_dates_are_deleted_and_overridden_ones_reported() -> None:
+    ended = PlanTerms(REFERENCE_START, D(2026, 7, 31), 22, 599, GIFT)
+    stored = [_stored(m) for m in range(1, 8)] + [_stored(8, overridden=True), _stored(9)]
+    sync = sync_charges(ended, stored, TODAY)
+    assert sync.delete == (9,)
+    assert sync.stranded == ("2026-08",)
+    assert sync.create == sync.update == ()
