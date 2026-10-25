@@ -300,6 +300,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Import
+         * @description The committed import, or null if the sheet hasn't been imported yet.
+         */
+        get: operations["get_import_api_v1_import_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Import */
+        post: operations["preview_import_api_v1_import_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/import/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Import */
+        post: operations["commit_import_api_v1_import_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -450,6 +504,260 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** ImportBlocker */
+        ImportBlocker: {
+            key: components["schemas"]["ImportRowKey"] | null;
+            /** Message */
+            message: string;
+        };
+        /** ImportCard */
+        ImportCard: {
+            key: components["schemas"]["ImportRowKey"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Chain Id */
+            chain_id: number | null;
+            /** Price Paid */
+            price_paid: number;
+            /** Face Value */
+            face_value: number;
+            /** Confirmed */
+            confirmed: boolean;
+        };
+        /** ImportChainSpan */
+        ImportChainSpan: {
+            /** Until */
+            until: string | null;
+            /** Chain Id */
+            chain_id: number;
+        };
+        /** ImportChoices */
+        ImportChoices: {
+            /**
+             * Cutoff
+             * Format: date
+             */
+            cutoff: string;
+            /** Chain Rule */
+            chain_rule: components["schemas"]["ImportChainSpan"][];
+            /**
+             * Rows
+             * @default []
+             */
+            rows: components["schemas"]["ImportRowChoice"][];
+            /**
+             * Fixes
+             * @default []
+             */
+            fixes: components["schemas"]["ImportFix"][];
+            /** Periods */
+            periods?: components["schemas"]["ImportPeriod"][] | null;
+        };
+        /** ImportCredit */
+        ImportCredit: {
+            key: components["schemas"]["ImportRowKey"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Chain Id */
+            chain_id: number | null;
+            /** Amount */
+            amount: number;
+            destination: components["schemas"]["CreditDestination"];
+        };
+        /** ImportFee */
+        ImportFee: {
+            key: components["schemas"]["ImportRowKey"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Chain Id */
+            chain_id: number | null;
+            /** Amount */
+            amount: number;
+            payment_source: components["schemas"]["PaymentSource"];
+            /** Period Index */
+            period_index: number | null;
+        };
+        /** ImportFileTotals */
+        ImportFileTotals: {
+            /** Name */
+            name: string;
+            /** Legacy Total */
+            legacy_total: number;
+            /** Tickets */
+            tickets: number;
+            /** Imported Total */
+            imported_total: number;
+            /** Imported Tickets */
+            imported_tickets: number;
+        };
+        /** ImportFix */
+        ImportFix: {
+            /** File */
+            file: number;
+            /** Line */
+            line: number;
+            /**
+             * Column
+             * @enum {string}
+             */
+            column: "Item" | "Net Cost" | "Number of Tickets" | "Date";
+            /** Value */
+            value: string;
+        };
+        /** ImportIn */
+        ImportIn: {
+            /** Files */
+            files: components["schemas"]["ImportSheetFile"][];
+            choices: components["schemas"]["ImportChoices"];
+        };
+        /** ImportLeftOut */
+        ImportLeftOut: {
+            key: components["schemas"]["ImportRowKey"];
+            /** Item */
+            item: string;
+            /** Date */
+            date: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "after_cutoff" | "skipped";
+        };
+        /** ImportOut */
+        ImportOut: {
+            /**
+             * Committed At
+             * Format: date-time
+             */
+            committed_at: string;
+            /**
+             * Cutoff
+             * Format: date
+             */
+            cutoff: string;
+            /** Files */
+            files: components["schemas"]["ImportFileTotals"][];
+        };
+        /** ImportPeriod */
+        ImportPeriod: {
+            /** Chain Id */
+            chain_id: number;
+            /** Amount */
+            amount: number;
+            /** Billing Day */
+            billing_day: number;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+            payment_source: components["schemas"]["PaymentSource"];
+        };
+        /** ImportProposal */
+        ImportProposal: {
+            /** Visits */
+            visits: components["schemas"]["ImportVisit"][];
+            /** Credits */
+            credits: components["schemas"]["ImportCredit"][];
+            /** Cards */
+            cards: components["schemas"]["ImportCard"][];
+            /** Fees */
+            fees: components["schemas"]["ImportFee"][];
+            /** Periods */
+            periods: components["schemas"]["ImportPeriod"][];
+            /** Left Out */
+            left_out: components["schemas"]["ImportLeftOut"][];
+            /** Errors */
+            errors: components["schemas"]["ImportRowError"][];
+            /** Blockers */
+            blockers: components["schemas"]["ImportBlocker"][];
+            /** Totals */
+            totals: components["schemas"]["ImportFileTotals"][];
+            /** Ready */
+            ready: boolean;
+        };
+        /** ImportRowChoice */
+        ImportRowChoice: {
+            /** File */
+            file: number;
+            /** Line */
+            line: number;
+            /**
+             * Skip
+             * @default false
+             */
+            skip: boolean;
+            /** Chain Id */
+            chain_id?: number | null;
+            /** Face Value */
+            face_value?: number | null;
+            /** My Cost */
+            my_cost?: number | null;
+            /** Guest Cost */
+            guest_cost?: number | null;
+            payment_source?: components["schemas"]["PaymentSource"] | null;
+            refund_destination?: components["schemas"]["CreditDestination"] | null;
+        };
+        /** ImportRowError */
+        ImportRowError: {
+            /** File */
+            file: number;
+            /** Line */
+            line: number;
+            /** Item */
+            item: string;
+            /** Column */
+            column: string;
+            /** Value */
+            value: string;
+            /** Message */
+            message: string;
+        };
+        /** ImportRowKey */
+        ImportRowKey: {
+            /** File */
+            file: number;
+            /** Line */
+            line: number;
+        };
+        /** ImportSheetFile */
+        ImportSheetFile: {
+            /** Name */
+            name: string;
+            /** Text */
+            text: string;
+        };
+        /** ImportVisit */
+        ImportVisit: {
+            key: components["schemas"]["ImportRowKey"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Chain Id */
+            chain_id: number | null;
+            /** Title */
+            title: string;
+            /** My Cost */
+            my_cost: number;
+            /** Guest Count */
+            guest_count: number;
+            /** Guest Cost */
+            guest_cost: number;
+            payment_source: components["schemas"]["PaymentSource"];
         };
         /**
          * PaymentSource
@@ -1530,6 +1838,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WalletOut"][];
+                };
+            };
+        };
+    };
+    get_import_api_v1_import_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"] | null;
+                };
+            };
+        };
+    };
+    preview_import_api_v1_import_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProposal"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_import_api_v1_import_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

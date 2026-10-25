@@ -3,7 +3,7 @@
 import datetime as dt
 from enum import StrEnum
 
-from sqlalchemy import CheckConstraint, Date, Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, Date, DateTime, Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -15,6 +15,8 @@ __all__ = [
     "CreditDestination",
     "FeeCharge",
     "GiftCardLoad",
+    "Import",
+    "ImportFile",
     "PaymentSource",
     "SubscriptionPlan",
     "Visit",
@@ -129,3 +131,27 @@ class FeeCharge(Base):
     amount: Mapped[int]
     payment_source: Mapped[PaymentSource] = mapped_column(_enum(PaymentSource))
     is_overridden: Mapped[bool] = mapped_column(default=False)
+
+
+class Import(Base):
+    """The one-time sheet import (spec §5.8). Its presence means the import can't run again."""
+
+    __tablename__ = "imports"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    committed_at: Mapped[dt.datetime] = mapped_column(DateTime)
+    cutoff: Mapped[dt.date] = mapped_column(Date)  # rows on or after it were left to the app
+
+
+class ImportFile(Base):
+    """One uploaded tab: its totals as the sheet shows them, and what was actually imported."""
+
+    __tablename__ = "import_files"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    import_id: Mapped[int] = mapped_column(ForeignKey("imports.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    legacy_total: Mapped[int]
+    ticket_total: Mapped[int]
+    imported_total: Mapped[int]
+    imported_tickets: Mapped[int]
