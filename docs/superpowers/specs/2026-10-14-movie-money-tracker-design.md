@@ -205,6 +205,7 @@ A poster grid of films I've seen. Each card shows the title, year, number of vis
 ### 5.8 Import (one-time)
 
 1. Upload one CSV per sheet tab (Google Sheets → File → Download → CSV). The format is the first four columns *Item, Net Cost, Number of Tickets, Date*. Other columns are ignored.
+   - **Cutoff date:** the app owns everything from the cutoff on, and the sheet owns everything before it. Rows dated on or after the cutoff are listed but not imported, so anything already logged in the app is never entered twice.
 2. **Classify** each row:
    - Item contains "Movie Club Fee" → fee charge.
    - Item contains "Gift Card" → gift card load.
@@ -215,9 +216,13 @@ A poster grid of films I've seen. Each card shows the title, year, number of vis
    - **Gift card face value:** required for each load. Pre-filled with price paid and flagged until confirmed.
    - **Visit cost split:** a visit with net cost > 0 and guests defaults to splitting the cost evenly between me and guests. Editable.
    - **Fee rows:** the review proposes subscription plan periods from the imported fees (amount changes start new periods). Imported fees become overridden charges at their real amounts and dates. Plan generation fills the months the sheet never logged.
-   - **TMDB matching:** a best match per distinct title with poster thumbnails. Change or clear any match.
+   - **Visit payment:** a visit with a cost defaults to *gift card* when a card for its chain was bought on or before that date, otherwise *bank*. A refund (negative row) defaults to *bank*. Editable.
    - **Row errors** (unparseable date or amount) are listed and must be fixed or explicitly skipped. Rows are never silently dropped.
-4. **Commit** writes everything in one transaction and shows the legacy totals (per uploaded file) for comparison against the sheet.
+4. **Commit** writes everything in one transaction and shows the legacy totals (per uploaded file) for comparison against the sheet. The legacy total covers the whole file, including rows after the cutoff, so it still matches the sheet. The amount actually imported is shown beside it.
+
+The import runs once. Commit is refused if an import has already been committed.
+
+*Order change (2026-10-25):* the import ships before TMDB (M5 before M4), so it doesn't match posters. M4 matches posters for every existing visit, imported or logged by hand.
 
 ## 6. TMDB integration
 
@@ -303,8 +308,8 @@ movie-money-tracker/
 | M1 | Ledger core | Domain money rules (§4), DB models + migrations, CRUD API for chains, loads, visits and credits. |
 | M2 | App shell + logging UI | Layout/navigation, Activity, Log visit (no TMDB yet), Add gift card, Add credit, Settings (chains). |
 | M3 | Subscriptions | Plan periods, fee generation, per-month overrides, Settings → plans. |
-| M4 | TMDB | Search, film cache, poster cache, Films grid, posters across the UI. |
-| M5 | Import | CSV upload, classify, review, commit; verified against the real sheet. |
+| M5 | Import | CSV upload, classify, review, commit; verified against the real sheet. Built before M4. |
+| M4 | TMDB | Search, film cache, poster cache, Films grid, posters across the UI, matching posters for existing visits. |
 | M6 | Dashboard | KPIs, monthly chart, year over year, wallet runway, savings. |
 
 v1 is done when M0–M6 are merged, the real sheet history is imported, and the import's per-tab legacy totals match the sheet.
