@@ -16,6 +16,7 @@ function chainsApi(initial: Chain[] = [], { inUse = [] as number[] } = {}) {
 
   return mockApi({
     'GET /api/v1/health': () => ({ status: 'ok' }),
+    'GET /api/v1/plans': () => [],
     'GET /api/v1/chains': () => [...chains].sort((a, b) => a.name.localeCompare(b.name)),
     'POST /api/v1/chains': ({ body }) => {
       const input = body as Omit<Chain, 'id'>

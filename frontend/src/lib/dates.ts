@@ -24,3 +24,15 @@ export function shortDate(iso: string): string {
 export function monthLabel(yearMonth: string): string {
   return localDate(yearMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
+
+/** "2026-01-01" → "Jan 1, 2026" */
+export function longDate(iso: string): string {
+  return localDate(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+/** 22 → "22nd", for billing days ("billed on the 22nd"). */
+export function ordinal(day: number): string {
+  const teens = day % 100 >= 11 && day % 100 <= 13
+  const suffix = teens ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th'
+  return `${day}${suffix}`
+}

@@ -12,11 +12,15 @@ import { dangerButton, primaryButton, quietButton, secondaryButton } from '../co
 import { Field } from '../components/Field'
 import { Page } from '../components/Page'
 import { formatCents, parseDollars } from '../lib/money'
+import { SubscriptionsSection } from './SubscriptionsSection'
 
 export function SettingsPage() {
   return (
     <Page title="Settings">
-      <ChainsSection />
+      <div className="flex flex-col gap-16">
+        <ChainsSection />
+        <SubscriptionsSection />
+      </div>
     </Page>
   )
 }
