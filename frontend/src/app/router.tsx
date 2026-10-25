@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router'
 import { ActivityPage } from '../pages/ActivityPage'
 import { CreditFormPage } from '../pages/CreditFormPage'
+import { FeeFormPage } from '../pages/FeeFormPage'
 import { GiftCardFormPage } from '../pages/GiftCardFormPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { SettingsPage } from '../pages/SettingsPage'
@@ -18,6 +19,7 @@ export const routes: RouteObject[] = [
       { path: 'gift-cards/:id/edit', element: <GiftCardFormPage mode="edit" /> },
       { path: 'credits/new', element: <CreditFormPage mode="new" /> },
       { path: 'credits/:id/edit', element: <CreditFormPage mode="edit" /> },
+      { path: 'fees/:id/edit', element: <FeeFormPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
