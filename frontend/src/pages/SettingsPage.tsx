@@ -13,6 +13,7 @@ import { Field } from '../components/Field'
 import { Page } from '../components/Page'
 import { formatCents, parseDollars } from '../lib/money'
 import { SubscriptionsSection } from './SubscriptionsSection'
+import { SheetSection } from './import/SheetSection'
 
 export function SettingsPage() {
   return (
@@ -20,6 +21,7 @@ export function SettingsPage() {
       <div className="flex flex-col gap-16">
         <ChainsSection />
         <SubscriptionsSection />
+        <SheetSection />
       </div>
     </Page>
   )
