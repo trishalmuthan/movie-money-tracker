@@ -4,6 +4,7 @@ import csv
 import datetime as dt
 import io
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from app.domain.money import Cents, parse_dollars
@@ -67,13 +68,22 @@ class VisitRow:
 type Classified = FeeRow | GiftCardRow | VisitRow
 
 
-def parse_sheet_csv(text: str) -> ParsedFile:
-    """Rows from the first four columns. A row with any unreadable value becomes errors instead."""
+def parse_sheet_csv(text: str, fixes: Mapping[tuple[int, str], str] | None = None) -> ParsedFile:
+    """Rows from the first four columns. A row with any unreadable value becomes errors instead.
+
+    `fixes` replaces cells before parsing, keyed by (line, column name): how the review
+    screen corrects a bad date or amount without editing the file.
+    """
     rows: list[SheetRow] = []
     errors: list[RowError] = []
     reader = csv.reader(io.StringIO(text.removeprefix("\ufeff")))
     for line, record in enumerate(reader, start=1):
         cells = [cell.strip() for cell in (record + [""] * 4)[:4]]
+        if fixes:
+            cells = [
+                fixes.get((line, column), cell).strip()
+                for column, cell in zip(COLUMNS, cells, strict=True)
+            ]
         if not any(cells):
             continue
         if line == 1 and cells[0].lower() == "item":
