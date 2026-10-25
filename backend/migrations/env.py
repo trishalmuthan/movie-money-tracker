@@ -8,15 +8,18 @@ from app.db.base import Base
 from app.db.session import make_engine
 
 config = context.config
-if config.config_file_name is not None:
+if config.config_file_name is not None and config.attributes.get("configure_logging", True):
     fileConfig(config.config_file_name, disable_existing_loggers=False)
+
+# app.db.migrate passes the URL explicitly; the `alembic` CLI falls back to settings.
+database_url: str = config.attributes.get("database_url") or get_settings().database_url
 
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=get_settings().database_url,
+        url=database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         render_as_batch=True,
@@ -26,7 +29,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    engine = make_engine(get_settings().database_url)
+    engine = make_engine(database_url)
     with engine.connect() as connection:
         context.configure(
             connection=connection, target_metadata=target_metadata, render_as_batch=True

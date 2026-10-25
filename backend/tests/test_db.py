@@ -2,19 +2,16 @@ import datetime as dt
 from pathlib import Path
 
 import pytest
-from alembic import command
 from alembic.autogenerate import compare_metadata
-from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.config import get_settings
 from app.db import models
 from app.db.base import Base
+from app.db.migrate import upgrade_to_head
 from app.db.session import make_engine
 
-BACKEND_DIR = Path(__file__).resolve().parents[1]
 JAN1 = dt.date(2026, 1, 1)
 
 
@@ -57,18 +54,11 @@ def test_enum_columns_store_their_string_values(db: Session) -> None:
     assert stored == "bank"
 
 
-def test_migrations_match_models(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_migrations_match_models(tmp_path: Path) -> None:
     url = f"sqlite:///{(tmp_path / 'migrated.db').as_posix()}"
-    monkeypatch.setenv("DATABASE_URL", url)
-    get_settings.cache_clear()
-    try:
-        config = Config(str(BACKEND_DIR / "alembic.ini"))
-        config.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
-        command.upgrade(config, "head")
-        engine = make_engine(url)
-        with engine.connect() as connection:
-            diff = compare_metadata(MigrationContext.configure(connection), Base.metadata)
-        engine.dispose()
-        assert diff == []
-    finally:
-        get_settings.cache_clear()
+    upgrade_to_head(url)
+    engine = make_engine(url)
+    with engine.connect() as connection:
+        diff = compare_metadata(MigrationContext.configure(connection), Base.metadata)
+    engine.dispose()
+    assert diff == []
