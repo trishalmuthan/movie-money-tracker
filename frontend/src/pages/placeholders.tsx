@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Page } from '../components/Page'
 
-// Each of these is replaced by its real screen later in M2 (issues #32–#35).
+// Each of these is replaced by its real screen later in M2 (issues #33–#35).
 
 export function ActivityPage() {
   return (
@@ -37,10 +37,6 @@ export function CreditFormPage({ mode }: { mode: 'new' | 'edit' }) {
       intro="Record money that came back to your bank or onto a gift card."
     />
   )
-}
-
-export function SettingsPage() {
-  return <Page title="Settings" intro="Add your theatre chains and their standard ticket prices." />
 }
 
 export function NotFoundPage() {
