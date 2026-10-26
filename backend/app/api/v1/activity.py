@@ -28,7 +28,8 @@ class ActivityEntry(BaseModel):
     amount: int  # signed cents: credits are negative
     payment_source: str | None  # visit/fee source, credit's destination, None for gift cards
     effective_cost: int | None  # what it really cost; None for credits
-    is_overridden: bool = False  # a fee month edited by hand
+    is_overridden: bool = False  # a fee month the plan doesn't update: edited by hand or imported
+    from_sheet: bool = False  # that fee came from the sheet import
 
 
 @router.get("/activity", response_model=list[ActivityEntry])
@@ -99,6 +100,7 @@ def _fee_entry(
         payment_source=f.payment_source.value,
         effective_cost=alloc.effective_cost(("fee", f.id), f.amount, f.payment_source),
         is_overridden=f.is_overridden,
+        from_sheet=f.from_sheet,
     )
 
 

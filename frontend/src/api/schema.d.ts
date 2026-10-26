@@ -383,6 +383,11 @@ export interface components {
              * @default false
              */
             is_overridden: boolean;
+            /**
+             * From Sheet
+             * @default false
+             */
+            from_sheet: boolean;
         };
         /** ChainIn */
         ChainIn: {
@@ -465,6 +470,8 @@ export interface components {
             date: string;
             /** Is Overridden */
             is_overridden: boolean;
+            /** From Sheet */
+            from_sheet: boolean;
         };
         /** GiftCardIn */
         GiftCardIn: {

@@ -15,6 +15,7 @@ const MARCH = {
   amount: 599,
   payment_source: 'gift_card',
   is_overridden: false,
+  from_sheet: false,
 }
 
 const ROUTES = [{ path: '/fees/:id/edit', element: <FeeFormPage /> }]
@@ -92,6 +93,14 @@ describe('Edit a fee', () => {
     await screen.findByRole('heading', { name: 'Activity page' })
     expect(router.state.location.pathname).toBe('/')
     expect(api.calls.some((c) => c.method === 'POST' && c.path === '/api/v1/fees/3/reset')).toBe(true)
+  })
+
+  it('says when a month came from the sheet', async () => {
+    feesApi({ ...MARCH, is_overridden: true, from_sheet: true })
+    renderRoutes(ROUTES, '/fees/3/edit')
+    expect(await screen.findByText(/This month came from your sheet/)).toBeInTheDocument()
+    expect(screen.queryByText(/You've edited this month/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reset to plan' })).toBeInTheDocument()
   })
 
   it("explains a fee that doesn't exist", async () => {

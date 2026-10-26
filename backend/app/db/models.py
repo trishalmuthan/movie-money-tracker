@@ -131,6 +131,7 @@ class FeeCharge(Base):
     amount: Mapped[int]
     payment_source: Mapped[PaymentSource] = mapped_column(_enum(PaymentSource))
     is_overridden: Mapped[bool] = mapped_column(default=False)
+    from_sheet: Mapped[bool] = mapped_column(default=False)  # overridden by the import, not by you
 
 
 class Import(Base):

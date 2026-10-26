@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { cashOut, groupByMonth } from './activity'
 
 const e = (kind: 'visit' | 'fee' | 'gift_card' | 'credit', date: string, amount: number, source: string | null) => ({
-  kind, id: 1, date, chain_id: 1, description: '', amount, payment_source: source, effective_cost: null, is_overridden: false,
+  kind, id: 1, date, chain_id: 1, description: '', amount, payment_source: source, effective_cost: null, is_overridden: false, from_sheet: false,
 })
 
 describe('cashOut', () => {
