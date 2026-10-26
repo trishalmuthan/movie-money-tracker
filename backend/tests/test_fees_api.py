@@ -54,6 +54,7 @@ def test_fees_show_in_activity_with_fifo_effective_costs(client: TestClient) -> 
         "payment_source": "gift_card",
         "effective_cost": 419,  # 599 × 3500 / 5000
         "is_overridden": False,
+        "from_sheet": False,
     }
     assert fees["2026-06"]["amount"] == 1299
 
@@ -104,6 +105,7 @@ def test_editing_a_fee_overrides_it_and_reset_restores_the_plan(client: TestClie
         "amount": 0,
         "payment_source": "bank",
         "is_overridden": True,
+        "from_sheet": False,
     }
     # Generation (any ledger read, any plan edit) leaves it alone.
     client.put("/api/v1/plans/1", json={**PLAN, "amount": 699, "end_date": "2026-05-31"})
@@ -116,6 +118,7 @@ def test_editing_a_fee_overrides_it_and_reset_restores_the_plan(client: TestClie
         "amount": 699,
         "payment_source": "gift_card",
         "is_overridden": False,
+        "from_sheet": False,
     }
 
 

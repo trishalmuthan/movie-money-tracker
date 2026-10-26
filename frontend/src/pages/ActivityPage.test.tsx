@@ -15,6 +15,7 @@ type Entry = {
   payment_source: string | null
   effective_cost: number | null
   is_overridden?: boolean
+  from_sheet?: boolean
 }
 
 // The M1 reference scenario plus a $7.17 bank refund, as GET /activity returns it.
@@ -98,6 +99,7 @@ describe('Activity', () => {
       entries: [
         { ...fee, id: 4, date: '2026-04-22', amount: 1299, payment_source: 'bank', effective_cost: 1299 },
         { ...fee, id: 3, date: '2026-03-22', amount: 0, payment_source: 'gift_card', effective_cost: 0 },
+        { ...fee, id: 2, date: '2026-02-22', amount: 599, payment_source: 'gift_card', effective_cost: 419, from_sheet: true },
       ],
     })
     renderRoutes(ROUTES, '/activity')
@@ -106,6 +108,9 @@ describe('Activity', () => {
     expect(within(march).getByText('$0.00')).toHaveClass('text-dim')
     const april = screen.getByRole('region', { name: 'April 2026' })
     expect(within(april).getByText('Fee, Regal, Paid by bank, edited')).toBeInTheDocument()
+    // A month imported from the sheet wasn't edited by you.
+    const feb = screen.getByRole('region', { name: 'February 2026' })
+    expect(within(feb).getByText('Fee, Regal, Paid with gift card, from your sheet')).toBeInTheDocument()
     // A bank-paid fee is cash out; the skipped one moves nothing.
     expect(within(april).getByText('Cash out $12.99')).toBeInTheDocument()
     expect(within(march).getByText('Cash out $0.00')).toBeInTheDocument()

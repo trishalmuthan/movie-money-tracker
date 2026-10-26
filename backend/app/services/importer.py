@@ -69,6 +69,7 @@ def commit(
             amount=fee.amount,
             payment_source=fee.payment_source,
             is_overridden=True,  # the sheet's real amount and date; the plan never rewrites it
+            from_sheet=True,
         )
         for fee in proposal.fees
     )

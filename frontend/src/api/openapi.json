@@ -1465,6 +1465,11 @@
             "type": "boolean",
             "title": "Is Overridden",
             "default": false
+          },
+          "from_sheet": {
+            "type": "boolean",
+            "title": "From Sheet",
+            "default": false
           }
         },
         "type": "object",
@@ -1695,6 +1700,10 @@
           "is_overridden": {
             "type": "boolean",
             "title": "Is Overridden"
+          },
+          "from_sheet": {
+            "type": "boolean",
+            "title": "From Sheet"
           }
         },
         "type": "object",
@@ -1706,7 +1715,8 @@
           "chain_id",
           "month",
           "date",
-          "is_overridden"
+          "is_overridden",
+          "from_sheet"
         ],
         "title": "FeeOut"
       },

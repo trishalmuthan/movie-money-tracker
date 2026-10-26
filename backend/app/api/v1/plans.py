@@ -125,7 +125,7 @@ def delete_plan(plan_id: int, session: SessionDep) -> None:
     if overridden:
         raise HTTPException(
             status_code=409,
-            detail=f"This plan has edited fees ({_months(overridden)}). Reset them first, or end the plan instead.",
+            detail=f"This plan has fees you edited or imported ({_months(overridden)}). Reset them first, or end the plan instead.",
         )
     session.delete(plan)  # its generated charges go with it (ON DELETE CASCADE)
     session.commit()
@@ -140,7 +140,7 @@ def _sync_and_commit(
         session.rollback()
         raise HTTPException(
             status_code=409,
-            detail=f"These dates would drop edited fees for {_months(stranded)}. Reset those months first.",
+            detail=f"These dates would drop fees you edited or imported for {_months(stranded)}. Reset those months first.",
         )
     session.commit()
     for plan in plans:

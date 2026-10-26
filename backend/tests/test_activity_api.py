@@ -63,6 +63,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "payment_source": "bank",
             "effective_cost": None,
             "is_overridden": False,
+            "from_sheet": False,
         },
         {
             "kind": "visit",
@@ -74,6 +75,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "payment_source": "bank",
             "effective_cost": 500,
             "is_overridden": False,
+            "from_sheet": False,
         },
         {
             "kind": "visit",
@@ -85,6 +87,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "payment_source": "gift_card",
             "effective_cost": 1820,
             "is_overridden": False,
+            "from_sheet": False,
         },
         {
             "kind": "gift_card",
@@ -96,6 +99,7 @@ def test_activity_lists_everything_newest_first_with_effective_costs(client: Tes
             "payment_source": None,
             "effective_cost": 3500,
             "is_overridden": False,
+            "from_sheet": False,
         },
     ]
 

@@ -128,8 +128,14 @@ def test_commit_writes_everything_once(client: TestClient, db: Session) -> None:
     # Imported fees are edited charges at their real dates; the open period fills Mar–Sep.
     fees = {f["date"]: f for f in client.get("/api/v1/activity?kind=fee").json()}
     assert len(fees) == 9
-    assert fees["2026-01-22"]["is_overridden"] is True
-    assert fees["2026-03-22"]["is_overridden"] is False
+    assert (fees["2026-01-22"]["is_overridden"], fees["2026-01-22"]["from_sheet"]) == (True, True)
+    assert (fees["2026-03-22"]["is_overridden"], fees["2026-03-22"]["from_sheet"]) == (False, False)
+    # Editing a sheet month makes it yours; resetting hands it to the plan.
+    jan = fees["2026-01-22"]["id"]
+    edited = client.put(f"/api/v1/fees/{jan}", json={"amount": 0, "payment_source": "bank"}).json()
+    assert (edited["is_overridden"], edited["from_sheet"]) == (True, False)
+    reset = client.post(f"/api/v1/fees/{fees['2026-02-22']['id']}/reset").json()
+    assert (reset["is_overridden"], reset["from_sheet"]) == (False, False)
 
     again = client.post("/api/v1/import/commit", json=_body(READY_ROWS))
     assert again.status_code == 409

@@ -31,6 +31,7 @@ class FeeOut(FeeIn):
     month: str
     date: dt.date
     is_overridden: bool
+    from_sheet: bool  # set by the import; editing or resetting the month clears it
 
 
 @router.get("/{fee_id}", response_model=FeeOut)
@@ -43,6 +44,7 @@ def update_fee(fee_id: int, body: FeeIn, session: SessionDep) -> FeeOut:
     """Edit one month. Generation never touches it again until it's reset."""
     fee = get_or_404(session, models.FeeCharge, fee_id)
     fee.amount, fee.payment_source, fee.is_overridden = body.amount, body.payment_source, True
+    fee.from_sheet = False
     session.commit()
     return _out(session, fee)
 
@@ -51,7 +53,7 @@ def update_fee(fee_id: int, body: FeeIn, session: SessionDep) -> FeeOut:
 def reset_fee(fee_id: int, session: SessionDep, today: TodayDep) -> FeeOut:
     """Hand the month back to its plan: its amount, source and billing day."""
     fee = get_or_404(session, models.FeeCharge, fee_id)
-    fee.is_overridden = False
+    fee.is_overridden = fee.from_sheet = False
     sync_plan(session, get_or_404(session, models.SubscriptionPlan, fee.plan_id), today)
     session.commit()
     return _out(session, fee)
@@ -69,4 +71,5 @@ def _out(session: Session, fee: models.FeeCharge) -> FeeOut:
         amount=fee.amount,
         payment_source=fee.payment_source,
         is_overridden=fee.is_overridden,
+        from_sheet=fee.from_sheet,
     )

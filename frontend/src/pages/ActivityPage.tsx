@@ -229,6 +229,13 @@ function MonthSection({ month, entries, chainNames }: MonthSectionProps) {
   )
 }
 
+/** For a fee the plan doesn't update: whether the sheet or you set it. A skipped month already says why. */
+function whoSetIt(entry: ActivityEntry): string | undefined {
+  if (entry.amount === 0) return undefined
+  if (entry.from_sheet) return 'from your sheet'
+  return entry.is_overridden ? 'edited' : undefined
+}
+
 function describeSource(entry: ActivityEntry): string | undefined {
   // A $0 fee is a month you skipped; it moved no money, so how it was paid doesn't matter.
   if (entry.kind === 'fee' && entry.amount === 0) return 'Skipped'
@@ -251,7 +258,7 @@ function EntryRow({ entry, chainNames }: { entry: ActivityEntry; chainNames: Map
     kindLabel,
     entry.chain_id !== null ? chainNames.get(entry.chain_id) : undefined,
     describeSource(entry),
-    entry.is_overridden && entry.amount > 0 ? 'edited' : undefined,
+    whoSetIt(entry),
   ].filter(Boolean)
   // A fee belongs to its subscription: edit it (or set it to $0), never delete it.
   const deletable = entry.kind === 'fee' ? null : { kind: entry.kind, id: entry.id }

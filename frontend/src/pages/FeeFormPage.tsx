@@ -83,7 +83,9 @@ function FeeForm({ fee }: { fee: Fee }) {
     <form onSubmit={handleSubmit} noValidate className="flex max-w-xl flex-col gap-6">
       {fee.is_overridden && (
         <p className="text-sm">
-          You've edited this month, so changes to the subscription no longer update it.
+          {fee.from_sheet
+            ? "This month came from your sheet, so changes to the subscription don't update it."
+            : "You've edited this month, so changes to the subscription no longer update it."}
         </p>
       )}
       <Field
